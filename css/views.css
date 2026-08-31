@@ -29,6 +29,10 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-primary);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Main content */

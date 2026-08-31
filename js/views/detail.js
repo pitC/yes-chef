@@ -33,7 +33,7 @@ export async function renderDetailView(params, container) {
   container.innerHTML = `
     <header class="app-header">
       <button class="btn btn--secondary back-btn" aria-label="Back to browse">← Back</button>
-      <h1 class="app-header__title" style="flex:1; text-align:center; margin-right:60px;">${recipe.title}</h1>
+      <h1 class="app-header__title" style="flex:1; text-align:center; margin-right:60px;" title="${recipe.title.replace(/"/g, '&quot;')}">${recipe.title}</h1>
     </header>
     <main class="app-main" style="max-width:900px; margin:0 auto; width:100%;">
       <div class="recipe-detail__header">
