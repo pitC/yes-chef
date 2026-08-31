@@ -31,7 +31,7 @@ function init() {
   router.start();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
       console.error('SW registration failed:', err);
     });
   }

@@ -1,32 +1,32 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v12';
+const CACHE_NAME = 'yes-chef-v13';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/base.css',
-  '/css/views.css',
-  '/js/bootstrap.js',
-  '/js/signals.js',
-  '/js/router.js',
-  '/js/data/recipes.js',
-  '/js/types/recipe.js',
-  '/js/utils/scaling.js',
-  '/js/utils/tags.js',
-  '/js/views/view-manager.js',
-  '/js/views/browse.js',
-  '/js/views/detail.js',
-  '/js/views/cooking.js',
-  '/js/views/empty-states.js',
-  '/js/components/recipe-card.js',
-  '/js/components/servings-stepper.js',
-  '/js/components/cooking-step.js',
-  '/js/components/timer-tray.js',
-  '/js/timers/timer.js',
-  '/js/timers/manager.js',
-  '/js/timers/sw-messaging.js',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+  './',
+  'index.html',
+  'manifest.json',
+  'css/base.css',
+  'css/views.css',
+  'js/bootstrap.js',
+  'js/signals.js',
+  'js/router.js',
+  'js/data/recipes.js',
+  'js/types/recipe.js',
+  'js/utils/scaling.js',
+  'js/utils/tags.js',
+  'js/views/view-manager.js',
+  'js/views/browse.js',
+  'js/views/detail.js',
+  'js/views/cooking.js',
+  'js/views/empty-states.js',
+  'js/components/recipe-card.js',
+  'js/components/servings-stepper.js',
+  'js/components/cooking-step.js',
+  'js/components/timer-tray.js',
+  'js/timers/timer.js',
+  'js/timers/manager.js',
+  'js/timers/sw-messaging.js',
+  'icons/icon-192.svg',
+  'icons/icon-512.svg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -94,8 +94,8 @@ self.addEventListener('message', (event) => {
     setTimeout(() => {
       self.registration.showNotification('Timer Complete', {
         body: `${label} is ready!`,
-        icon: '/icons/icon-192.svg',
-        badge: '/icons/icon-192.svg',
+        icon: 'icons/icon-192.svg',
+        badge: 'icons/icon-192.svg',
         tag: timerId,
         requireInteraction: true,
         actions: [
@@ -116,11 +116,11 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url === location.origin && 'focus' in client) {
+        if (client.url.startsWith(location.origin) && 'focus' in client) {
           return client.focus();
         }
       }
-      return clients.openWindow('/');
+      return clients.openWindow('./');
     })
   );
 });

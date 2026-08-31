@@ -2,7 +2,7 @@
   "name": "Yes Chef",
   "short_name": "Yes Chef",
   "description": "Recipe & cooking companion app with parallel timers",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#fafafa",
   "theme_color": "#2e7d32",
@@ -27,7 +27,7 @@
       "name": "Browse Recipes",
       "short_name": "Browse",
       "description": "Browse all recipes",
-      "url": "/",
+      "url": "./",
       "icons": [{ "src": "icons/icon-192.svg", "sizes": "192x192" }]
     }
   ]

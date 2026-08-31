@@ -3,7 +3,7 @@ let recipesCache = null;
 async function loadRecipes() {
   if (recipesCache) return recipesCache;
 
-  const url = new URL('/parser/menemen.json', window.location.href).href;
+  const url = new URL('parser/menemen.json', window.location.href).href;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to load recipes: ${response.status}`);
