@@ -16,7 +16,7 @@ This agent fetches recipe web pages, extracts structured data, normalizes units,
 | `title` | `<h1>`, `<title>` | Keep as-is |
 | `sourceUrl` | Current page URL | Keep as-is |
 | `sourceName` | Domain name (e.g. "The Guardian") | Keep as-is |
-| `tags` | Recipe category tags, or keyword parsing | Flat array of strings |
+| `tags` | Recipe category tags, or keyword parsing | Flat array of strings. Allowed labels: `mains`, `fish`, `veg`, `meat`, `salad`, `breakfast/supper`, `cocktails` |
 | `servings.base` | "Serves X" or "Portions X" | Number |
 | `servings.unit` | "servings", "people", or default "people" | From closed enum |
 | `timing.prepMinutes` | "Prep X min" | Integer |
