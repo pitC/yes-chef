@@ -246,13 +246,27 @@ export async function renderCookingView(params, container) {
         labelSpan.style.opacity = checked ? '0.6' : '';
       }
     });
-    // optional done styling when all checked
     const allChecked = recipe.ingredients.every(ing => prepChecked.value.has(ing.id));
     prepEl.classList.toggle('done', allChecked);
+    const prepText = prepEl.querySelector('.cooking-step__text');
+    const prepList = prepEl.querySelector('.prep-checklist');
+    const prepGrid = prepEl.querySelector('.cooking-step__grid');
     if (allChecked) {
       prepEl.style.opacity = '0.6';
+      prepEl.style.borderLeft = '4px solid var(--color-success)';
+      prepEl.style.paddingTop = '10px';
+      prepEl.style.paddingBottom = '10px';
+      if (prepText) prepText.style.display = 'none';
+      if (prepList) prepList.style.display = 'none';
+      if (prepGrid) prepGrid.style.gap = '0';
     } else {
       prepEl.style.opacity = '';
+      prepEl.style.borderLeft = '';
+      prepEl.style.paddingTop = '';
+      prepEl.style.paddingBottom = '';
+      if (prepText) prepText.style.display = '';
+      if (prepList) prepList.style.display = '';
+      if (prepGrid) prepGrid.style.gap = '';
     }
   });
   cleanups.push(refreshPrep);

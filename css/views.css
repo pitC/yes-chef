@@ -355,10 +355,12 @@
 }
 .cooking-step.done .cooking-step__text,
 .cooking-step.done .cooking-step__ingredients-meta,
-.cooking-step.done .step-timer {
+.cooking-step.done .step-timer,
+.cooking-step--prep.done .prep-checklist {
   display: none !important;
 }
-.cooking-step.done .cooking-step__grid {
+.cooking-step.done .cooking-step__grid,
+.cooking-step--prep.done .cooking-step__grid {
   gap: 0;
 }
 
