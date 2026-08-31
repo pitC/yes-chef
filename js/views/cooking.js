@@ -123,8 +123,6 @@ export async function renderCookingView(params, container) {
             newDone.delete(stepId);
           } else {
             newDone.add(stepId);
-            // clear timer when step is marked done
-            timerManager.dismissTimer(stepId);
           }
           doneSteps.value = newDone;
         },
