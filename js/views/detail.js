@@ -114,7 +114,10 @@ export async function renderDetailView(params, container) {
     .join('');
 
   const backBtn = container.querySelector('.back-btn');
-  backBtn.addEventListener('click', () => navigate('/'));
+  backBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(`servings_${recipe.id}`);
+    navigate('/');
+  });
 
   const startBtn = container.querySelector('.start-cooking-btn');
   startBtn.addEventListener('click', () => navigate(`/cook/${recipe.id}`));

@@ -214,6 +214,7 @@ export async function renderCookingView(params, container) {
       sessionStorage.removeItem('doneSteps');
       sessionStorage.removeItem('prepChecked');
       sessionStorage.removeItem('prepDone');
+      sessionStorage.removeItem(`servings_${recipe.id}`);
       doneSteps.value = new Set();
       prepChecked.value = new Set();
       prepDone.value = false;
