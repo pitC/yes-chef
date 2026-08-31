@@ -39,6 +39,7 @@ This agent fetches recipe web pages, extracts structured data, normalizes units,
 ### 4. Steps extraction
 
 - Each step gets sequential `order` (1, 2, 3...)
+- Ingredients in the step text are encapsulated in brackets, e.g. `[onions]`, `[garlic]`, `[eggs]`
 - `timer` is optional: `{ durationSeconds, label }` if the step has a cook/prep time
 - `ingredientRefs` lists which ingredient `id`s are relevant to that step — the cooking mode uses this to highlight ingredients
 
