@@ -631,16 +631,16 @@
 }
 @media (min-width: 1024px) {
   .cooking-step__grid {
-    grid-template-columns: 28px 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-areas:
-      "number number"
-      "check text"
+      "check number"
+      "text text"
       "meta meta"
       "timer timer";
-    align-items: start;
+    align-items: center;
   }
   .cooking-step__grid .cooking-step__check {
-    margin-top: 4px;
+    margin-top: 0;
   }
 }
 
