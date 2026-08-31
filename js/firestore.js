@@ -81,48 +81,35 @@ export async function ensureSyncConfig(statusEl) {
 
 export async function fetchAllRecipes({ collectionKey, onStatus } = {}) {
   if (!collectionKey) {
-    console.error(`[Yes Chef] fetchAllRecipes: no collectionKey, using local fallback`);
     if (onStatus) onStatus('Local only');
     return [];
   }
 
-  console.error(`[Yes Chef] fetchAllRecipes: querying collection "${collectionKey}"`);
   if (onStatus) onStatus('Syncing…');
   try {
     const { db, collection, getDocs } = await getFirestoreApi();
-    console.error(`[Yes Chef] fetchAllRecipes: getFirestoreApi resolved, calling getDocs...`);
     const snapshot = await getDocs(collection(db, collectionKey));
-    const size = snapshot.size ?? snapshot.docs?.length ?? 0;
-    const ids = snapshot.docs ? snapshot.docs.map((d) => d.id) : [];
-    console.error(`[Yes Chef] fetchAllRecipes: snapshot size=${size} ids=[${ids.join(', ')}] empty=${snapshot.empty}`);
     const recipes = [];
     const forEach = snapshot.forEach ? snapshot.forEach.bind(snapshot) : null;
     if (forEach) {
       forEach((docSnap) => {
-        console.error(`[Yes Chef] fetchAllRecipes: doc "${docSnap.id}" dataKeys=${Object.keys(docSnap.data() || {}).join(',')}`);
         if (docSnap.id === METADATA_DOCUMENT_ID) return;
         const data = docSnap.data();
         if (data && typeof data === 'object') {
           const recipe = data.id ? data : { ...data, id: docSnap.id };
           recipes.push(recipe);
-        } else {
-          console.error(`[Yes Chef] fetchAllRecipes: doc "${docSnap.id}" skipped — no object data`);
         }
       });
     } else if (Array.isArray(snapshot.docs)) {
       for (const docSnap of snapshot.docs) {
-        console.error(`[Yes Chef] fetchAllRecipes: doc "${docSnap.id}" dataKeys=${Object.keys(docSnap.data() || {}).join(',')}`);
         if (docSnap.id === METADATA_DOCUMENT_ID) continue;
         const data = docSnap.data();
         if (data && typeof data === 'object') {
           const recipe = data.id ? data : { ...data, id: docSnap.id };
           recipes.push(recipe);
-        } else {
-          console.error(`[Yes Chef] fetchAllRecipes: doc "${docSnap.id}" skipped — no object data`);
         }
       }
     }
-    console.error(`[Yes Chef] fetchAllRecipes: returning ${recipes.length} recipes from "${collectionKey}"`);
     if (onStatus) onStatus('Synced');
     return recipes;
   } catch (e) {
