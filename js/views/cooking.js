@@ -93,8 +93,8 @@ export async function renderCookingView(params, container) {
     container.innerHTML = `
       <div class="cooking-mode">
         <header class="cooking-mode__header">
-          <button class="exit-cooking-btn btn btn--secondary" aria-label="Exit cooking mode">✕ Exit</button>
-          <h1>${recipe.title}</h1>
+          <button class="exit-cooking-btn btn btn--secondary" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
+          <h1 title="${recipe.title.replace(/"/g, '&quot;')}">${recipe.title}</h1>
         </header>
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">

@@ -4,6 +4,18 @@ import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderServingsStepper } from '../components/servings-stepper.js';
 
+function getTagClass(tag) {
+  const normalized = String(tag).toLowerCase().trim();
+  if (normalized === 'mains') return 'tag--mains';
+  if (normalized === 'fish') return 'tag--fish';
+  if (normalized === 'veg' || normalized === 'vegetarian' || normalized === 'vegetables') return 'tag--veg';
+  if (normalized === 'meat') return 'tag--meat';
+  if (normalized === 'salad') return 'tag--salad';
+  if (normalized === 'breakfast' || normalized === 'supper' || normalized === 'breakfast/supper') return 'tag--breakfast';
+  if (normalized === 'cocktails' || normalized === 'cocktail') return 'tag--cocktails';
+  return 'tag--default';
+}
+
 export async function renderDetailView(params, container) {
   if (!container) container = document.getElementById('app') || document.body;
   const recipe = await getRecipe(params.id);
@@ -45,7 +57,7 @@ export async function renderDetailView(params, container) {
           <span>•</span>
           <a href="${recipe.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${recipe.sourceName} ↗</a>
           <div class="recipe-card__tags" style="margin-left:auto;">
-            ${recipe.tags.map((tag) => `<span class="tag">${tag}</span>`).join('')}
+            ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
           </div>
         </div>
       </div>

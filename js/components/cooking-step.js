@@ -21,9 +21,11 @@ export function renderCookingStep(step, ingredients, { isDone, isTimerRunning = 
     .map((ref) => {
       const ing = ingredientsMap.get(ref);
       if (!ing) return '';
+      const fullText = `${ing.name} · ${ing.amount} ${ing.unit}${ing.notes ? ` ${ing.notes}` : ''}`;
+      const escapedTitle = fullText.replace(/"/g, '&quot;');
       const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
       return `<div class="cooking-step__ingredient-row" style="display:flex; align-items:baseline; gap:6px; padding:2px 0;">`
-        + `<span>${ing.name} · ${ing.amount} ${ing.unit}${notes}</span>`
+        + `<span title="${escapedTitle}">${ing.name} · ${ing.amount} ${ing.unit}${notes}</span>`
         + `</div>`;
     })
     .join('');
