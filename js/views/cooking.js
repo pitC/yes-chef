@@ -9,6 +9,7 @@ import { scheduleNotification } from '../timers/sw-messaging.js';
 export const doneSteps = signal(new Set());
 export const activeStepId = signal(null);
 export const prepChecked = signal(new Set());
+export const prepDone = signal(false);
 
 export const COMPLETION_MESSAGES = [
   'Service! 🔔',
@@ -53,6 +54,21 @@ function savePrepChecked() {
   }
 }
 
+function loadPrepDone() {
+  const stored = sessionStorage.getItem('prepDone');
+  if (stored) {
+    prepDone.value = stored === 'true';
+  }
+}
+
+function savePrepDone() {
+  if (!prepDone.value) {
+    sessionStorage.removeItem('prepDone');
+  } else {
+    sessionStorage.setItem('prepDone', 'true');
+  }
+}
+
 export async function renderCookingView(params, container) {
   if (!container) container = document.getElementById('app') || document.body;
   const recipe = await getRecipe(params.id);
@@ -63,6 +79,7 @@ export async function renderCookingView(params, container) {
 
   loadDoneSteps();
   loadPrepChecked();
+  loadPrepDone();
 
   const cleanups = [];
   
@@ -76,6 +93,9 @@ export async function renderCookingView(params, container) {
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
             <div class="cooking-step__grid">
+              <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center;">
+                <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="width:20px; height:20px; accent-color:var(--color-primary); cursor:pointer;" />
+              </label>
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
               <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
               <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
@@ -105,6 +125,12 @@ export async function renderCookingView(params, container) {
     const stepElements = stepsContainer.querySelectorAll('.cooking-step[data-step-id^="step_"]');
     const prepElement = stepsContainer.querySelector('.cooking-step--prep');
     if (prepElement) {
+      const doneCb = prepElement.querySelector('.prep-done-checkbox');
+      if (doneCb) {
+        doneCb.addEventListener('change', () => {
+          prepDone.value = doneCb.checked;
+        });
+      }
       prepElement.querySelectorAll('.prep-checkbox').forEach(cb => {
         cb.addEventListener('change', () => {
           const ingId = cb.dataset.ingId;
@@ -112,6 +138,10 @@ export async function renderCookingView(params, container) {
           if (cb.checked) next.add(ingId);
           else next.delete(ingId);
           prepChecked.value = next;
+          // auto-collapse when all ingredients checked
+          if (next.size === recipe.ingredients.length) {
+            prepDone.value = true;
+          }
         });
       });
     }
@@ -151,8 +181,10 @@ export async function renderCookingView(params, container) {
     exitBtn.addEventListener('click', () => {
       sessionStorage.removeItem('doneSteps');
       sessionStorage.removeItem('prepChecked');
+      sessionStorage.removeItem('prepDone');
       doneSteps.value = new Set();
       prepChecked.value = new Set();
+      prepDone.value = false;
       navigate(`/recipe/${recipe.id}`);
     });
 
@@ -225,11 +257,20 @@ export async function renderCookingView(params, container) {
   });
   cleanups.push(persistPrep);
 
+  const persistPrepDone = effect(() => {
+    void prepDone.value;
+    savePrepDone();
+  });
+  cleanups.push(persistPrepDone);
+
   const refreshPrep = effect(() => {
     void prepChecked.value;
+    void prepDone.value;
     if (!container) return;
     const prepEl = container.querySelector('.cooking-step--prep');
     if (!prepEl) return;
+    const doneCb = prepEl.querySelector('.prep-done-checkbox');
+    if (doneCb) doneCb.checked = prepDone.value;
     prepEl.querySelectorAll('.prep-checkbox').forEach(cb => {
       const ingId = cb.dataset.ingId;
       const checked = prepChecked.value.has(ingId);
@@ -240,12 +281,12 @@ export async function renderCookingView(params, container) {
         labelSpan.style.opacity = checked ? '0.6' : '';
       }
     });
-    const allChecked = recipe.ingredients.every(ing => prepChecked.value.has(ing.id));
-    prepEl.classList.toggle('done', allChecked);
+    const isCollapsed = prepDone.value;
+    prepEl.classList.toggle('done', isCollapsed);
     const prepText = prepEl.querySelector('.cooking-step__text');
     const prepList = prepEl.querySelector('.prep-checklist');
     const prepGrid = prepEl.querySelector('.cooking-step__grid');
-    if (allChecked) {
+    if (isCollapsed) {
       prepEl.style.opacity = '0.6';
       prepEl.style.borderLeft = '4px solid var(--color-success)';
       prepEl.style.paddingTop = '10px';
