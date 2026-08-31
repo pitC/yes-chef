@@ -36,8 +36,8 @@ global.Notification = class Notification {
   static requestPermission = () => Promise.resolve('granted');
 };
 
-// Mock fetch for recipes - intercept /parser/menemen.json
-import menemenData from '../parser/menemen.json';
+// Mock fetch for recipes - intercept /test/menemen.json
+import menemenData from './menemen.json';
 
 const _origFetch = globalThis.fetch;
 globalThis.fetch = async (input, ...args) => {
