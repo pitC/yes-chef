@@ -21,7 +21,7 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
       <div class="timer-tray" style="position:fixed; bottom:0; left:0; right:0; z-index:500;">
         <div class="timer-tray__list">
         ${allTimers.map(timer => `
-          <div class="timer-item ${timer.done ? 'done' : timer.remainingSeconds < 10 ? 'warning' : ''}" data-id="${timer.id}" style="background-color: ${timer.done ? 'green' : timer.remainingSeconds < 10 ? 'orange' : ''};">
+          <div class="timer-item ${timer.done ? 'done' : timer.remainingSeconds < 10 ? 'warning' : ''}" data-id="${timer.id}" style="background-color: ${timer.done ? '#6CAF87' : timer.remainingSeconds < 10 ? '#E67A3E' : '#406D68'};">
             <span class="timer-item__label">${timer.label}</span>
             <span class="timer-item__time">${formatTime(timer.remainingSeconds)}</span>
             ${!timer.done ? `<button class="timer-pause btn btn--secondary" data-id="${timer.id}">${timer.running ? 'Pause' : 'Resume'}</button>` : ''}

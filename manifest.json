@@ -4,8 +4,8 @@
   "description": "Recipe & cooking companion app with parallel timers",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#2e7d32",
+  "background_color": "#fdf8ec",
+  "theme_color": "#406D68",
   "orientation": "portrait-primary",
   "icons": [
     {

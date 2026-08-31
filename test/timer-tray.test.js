@@ -44,7 +44,7 @@ describe('timer tray component', () => {
     vi.advanceTimersByTime(56000); // 56 seconds elapsed, 9 seconds remaining
     
     const timerEl = container.querySelector('.timer-item');
-    expect(timerEl.style.backgroundColor).toBe('orange');
+    expect(timerEl.style.backgroundColor).toBe('rgb(230, 122, 62)');
   });
 
   it('done state -> green, pulsing', () => {
@@ -55,7 +55,7 @@ describe('timer tray component', () => {
     vi.advanceTimersByTime(1000);
     
     const timerEl = container.querySelector('.timer-item');
-    expect(timerEl.style.backgroundColor).toBe('green');
+    expect(timerEl.style.backgroundColor).toBe('rgb(108, 175, 135)');
   });
 
   it('dismiss removes timer from manager', () => {

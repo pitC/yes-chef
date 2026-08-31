@@ -111,7 +111,7 @@
 .search-bar:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  box-shadow: 0 0 0 3px rgba(64, 109, 104, 0.18);
 }
 
 .filter-chips {
@@ -570,9 +570,9 @@
 
 /* Ingredient highlight in step text */
 .ingredient-highlight {
-  background: #e8f5e9;
-  border: 1px solid #c8e6c9;
-  color: #2e7d32;
+  background: rgba(108, 175, 135, 0.18);
+  border: 1px solid #6CAF87;
+  color: #406D68;
   padding: 1px 7px;
   border-radius: 999px;
   font-weight: 600;
