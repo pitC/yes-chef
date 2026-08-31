@@ -31,18 +31,17 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
         </div>
       </div>
     `;
-    // equalize timer boxes to longest label width
+    // equalize timer boxes to longest label width and keep grid alignment
     {
       const items = container.querySelectorAll('.timer-item');
       if (items.length > 1) {
         items.forEach(el => { el.style.width = 'auto'; });
         let max = 0;
         items.forEach(el => {
-          // jsdom has 0 offsetWidth, fallback to label length estimation
           const w = el.offsetWidth || el.scrollWidth || (el.textContent.length * 8 + 80);
           if (w > max) max = w;
         });
-        items.forEach(el => { el.style.width = `${max}px`; el.style.justifyContent = 'space-between'; });
+        items.forEach(el => { el.style.width = `${max}px`; });
       }
     }
     

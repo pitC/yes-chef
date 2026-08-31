@@ -438,7 +438,8 @@
 }
 
 .timer-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 64px 84px 28px;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-md);
@@ -465,11 +466,25 @@
 
 .timer-item__label {
   font-size: 0.875rem;
+  grid-column: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .timer-item__time {
   font-family: var(--font-mono);
   font-size: 1rem;
+  grid-column: 2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+}
+
+.timer-item .timer-pause {
+  grid-column: 3;
+  width: 100%;
+  justify-content: center;
 }
 
 .timer-item__dismiss {
@@ -484,6 +499,7 @@
   border-radius: 50%;
   font-size: 1.25rem;
   line-height: 1;
+  grid-column: 4;
 }
 
 .timer-item__dismiss:hover {
