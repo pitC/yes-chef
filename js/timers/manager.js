@@ -12,20 +12,20 @@ function createTimer(config) {
     durationSeconds,
     onTick: (remaining) => {
       if (onTick) onTick(remaining);
-      // Update signal to trigger reactivity
-      const idx = timers.value.findIndex(t => t.id === id);
-      if (idx >= 0) {
-        const updated = [...timers.value];
-        updated[idx] = { ...updated[idx], remainingSeconds: Math.ceil(remaining / 1000) };
-        timers.value = updated;
+      // Update signal to trigger reactivity - mutate in place to keep object identity for pause/resume
+      const t = timers.value.find((t) => t.id === id);
+      if (t) {
+        t.remainingSeconds = Math.ceil(remaining / 1000);
+        timers.value = [...timers.value];
       }
     },
     onComplete: () => {
-      const idx = timers.value.findIndex(t => t.id === id);
-      if (idx >= 0) {
-        const updated = [...timers.value];
-        updated[idx] = { ...updated[idx], done: true, remainingSeconds: 0, running: false };
-        timers.value = updated;
+      const t = timers.value.find((t) => t.id === id);
+      if (t) {
+        t.done = true;
+        t.remainingSeconds = 0;
+        t.running = false;
+        timers.value = [...timers.value];
       }
       if (onComplete) onComplete();
     },
@@ -58,19 +58,25 @@ export const timerManager = {
   },
   
   pauseTimer(id) {
-    const timerInfo = timers.value.find(t => t.id === id);
-    if (timerInfo && timerInfo._timer) {
-      timerInfo._timer.pause();
-      timerInfo.running = false;
+    const t = timers.value.find((t) => t.id === id);
+    if (t && t._timer) {
+      t.running = false;
+      timers.value = [...timers.value];
+      t._timer.pause();
+    } else if (t) {
+      t.running = false;
       timers.value = [...timers.value];
     }
   },
-  
+
   resumeTimer(id) {
-    const timerInfo = timers.value.find(t => t.id === id);
-    if (timerInfo && timerInfo._timer) {
-      timerInfo._timer.resume();
-      timerInfo.running = true;
+    const t = timers.value.find((t) => t.id === id);
+    if (t && t._timer) {
+      t.running = true;
+      timers.value = [...timers.value];
+      t._timer.resume();
+    } else if (t) {
+      t.running = true;
       timers.value = [...timers.value];
     }
   },
