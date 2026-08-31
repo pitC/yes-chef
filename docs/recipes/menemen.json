@@ -1,0 +1,134 @@
+{
+  "id": "menemen",
+  "title": "Menemen",
+  "sourceUrl": "https://www.theguardian.com/food/2026/aug/29/yotam-ottolenghi-simple-breakfasts-recipes",
+  "sourceName": "The Guardian - Yotam Ottolenghi",
+  "tags": ["breakfast", "turkish", "eggs", "vegetarian"],
+  "servings": {
+    "base": 2,
+    "unit": "people"
+  },
+  "timing": {
+    "prepMinutes": 5,
+    "cookMinutes": 15,
+    "totalMinutes": 20
+  },
+  "ingredients": [
+    {
+      "id": "ing_1",
+      "name": "eggs",
+      "amount": 4,
+      "unit": "piece",
+      "notes": null
+    },
+    {
+      "id": "ing_2",
+      "name": "olive oil",
+      "amount": 3,
+      "unit": "tbsp",
+      "notes": null
+    },
+    {
+      "id": "ing_3",
+      "name": "onion",
+      "amount": 1,
+      "unit": "piece",
+      "notes": "finely chopped (160g)"
+    },
+    {
+      "id": "ing_4",
+      "name": "garlic",
+      "amount": 3,
+      "unit": "cloves",
+      "notes": "crushed"
+    },
+    {
+      "id": "ing_5",
+      "name": "cumin seeds",
+      "amount": 1,
+      "unit": "tsp",
+      "notes": null
+    },
+    {
+      "id": "ing_6",
+      "name": "Aleppo chilli flakes",
+      "amount": 0.5,
+      "unit": "tsp",
+      "notes": null
+    },
+    {
+      "id": "ing_7",
+      "name": "ground cinnamon",
+      "amount": 0.5,
+      "unit": "tsp",
+      "notes": null
+    },
+    {
+      "id": "ing_8",
+      "name": "tomato paste",
+      "amount": 0.5,
+      "unit": "tbsp",
+      "notes": null
+    },
+    {
+      "id": "ing_9",
+      "name": "cherry tomatoes",
+      "amount": 300,
+      "unit": "g",
+      "notes": "halved"
+    },
+    {
+      "id": "ing_10",
+      "name": "double cream",
+      "amount": 1,
+      "unit": "tbsp",
+      "notes": null
+    },
+    {
+      "id": "ing_11",
+      "name": "coriander leaves",
+      "amount": 5,
+      "unit": "g",
+      "notes": "roughly chopped"
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_1",
+      "order": 1,
+      "text": "Put the eggs into a bowl with half a teaspoon of salt. Lightly beat, just to break up the yolks, and set aside.",
+      "timer": null,
+      "ingredientRefs": []
+    },
+    {
+      "id": "step_2",
+      "order": 2,
+      "text": "Put the oil into a medium frying pan on a medium-high heat. Add the onion and garlic and cook for five minutes, stirring a few times, until softened and starting to colour.",
+      "timer": null,
+      "ingredientRefs": ["ing_3", "ing_4"]
+    },
+    {
+      "id": "step_3",
+      "order": 3,
+      "text": "Add the spices, tomato paste and an eighth of a teaspoon of salt and cook for two minutes, until fragrant.",
+      "timer": null,
+      "ingredientRefs": ["ing_5", "ing_6", "ing_7", "ing_8"]
+    },
+    {
+      "id": "step_4",
+      "order": 4,
+      "text": "Add the tomatoes and 60ml of water, then cook, uncovered, for 10 minutes until the tomatoes have broken down. Squish them with the back of a spoon if they need a bit of help.",
+      "timer": null,
+      "ingredientRefs": ["ing_9"]
+    },
+    {
+      "id": "step_5",
+      "order": 5,
+      "text": "Remove from the heat and swirl in the eggs, using a wooden spoon or spatula and moving the pan gently until just set. Spoon over the cream, sprinkle over the coriander and serve straight from the pan.",
+      "timer": null,
+      "ingredientRefs": ["ing_1", "ing_10", "ing_11"]
+    }
+  ],
+  "createdAt": "2026-08-31T12:00:00Z",
+  "updatedAt": "2026-08-31T12:00:00Z"
+}
