@@ -9,6 +9,7 @@ describe('timer tray component', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     vi.useFakeTimers();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     
     // Clear timers
     const timers = timerManager.getAllTimers();
@@ -18,6 +19,7 @@ describe('timer tray component', () => {
   afterEach(() => {
     document.body.removeChild(container);
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('hidden when no active timers', () => {
@@ -70,6 +72,24 @@ describe('timer tray component', () => {
     const dismissBtn = container.querySelector('.timer-dismiss');
     dismissBtn.click();
     
+    expect(window.confirm).toHaveBeenCalledWith('Close this timer?');
     expect(timerManager.getAllTimers().value.length).toBe(0);
+  });
+
+  it('dismiss cancelled when confirm returns false', () => {
+    window.confirm.mockReturnValue(false);
+    timerManager.startTimer({ id: '1', label: 'Test Timer', durationSeconds: 65 });
+    
+    renderTimerTray(timerManager.getAllTimers(), { 
+      onDismiss: (id) => timerManager.dismissTimer(id), 
+      onPause: vi.fn(), 
+      onResume: vi.fn() 
+    }, container);
+    
+    const dismissBtn = container.querySelector('.timer-dismiss');
+    dismissBtn.click();
+    
+    expect(window.confirm).toHaveBeenCalledWith('Close this timer?');
+    expect(timerManager.getAllTimers().value.length).toBe(1);
   });
 });

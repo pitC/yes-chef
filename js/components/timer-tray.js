@@ -62,6 +62,14 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
     }
     const dismissBtn = e.target.closest('.timer-dismiss');
     if (dismissBtn) {
+      try {
+        if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+          // eslint-disable-next-line no-alert
+          if (!window.confirm('Close this timer?')) return;
+        }
+      } catch {
+        // jsdom without confirm implementation - proceed
+      }
       onDismiss(dismissBtn.dataset.id);
     }
   });
