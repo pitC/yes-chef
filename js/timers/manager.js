@@ -28,6 +28,34 @@ function createTimer(config) {
         timers.value = [...timers.value];
       }
       if (onComplete) onComplete();
+      // Emit app notification when timer actually elapses (foreground fallback)
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          const body = `${label} is ready!`;
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.ready
+              .then((reg) => {
+                if (reg.showNotification) {
+                  return reg.showNotification('Timer Complete', {
+                    body,
+                    icon: 'icons/icon-192.svg',
+                    badge: 'icons/icon-192.svg',
+                    tag: id,
+                    requireInteraction: true,
+                  });
+                }
+                return new Notification('Timer Complete', { body, tag: id });
+              })
+              .catch(() => {
+                new Notification('Timer Complete', { body, tag: id });
+              });
+          } else {
+            new Notification('Timer Complete', { body, tag: id });
+          }
+        }
+      } catch {
+        // ignore notification errors
+      }
     },
   });
   
