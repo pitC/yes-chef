@@ -169,7 +169,7 @@ export async function renderCookingView(params, container) {
       const isDone = doneSteps.value.has(step.id);
       const isActive = step.id === nextUpId;
       const existingTimer = timerManager.getTimer(step.id);
-      const isTimerRunning = Boolean(existingTimer?.running && !existingTimer?.done);
+      const isTimerRunning = Boolean(existingTimer && !existingTimer.done);
 
       renderCookingStep(step, ingredientsMap, {
         isActive,
@@ -347,7 +347,7 @@ export async function renderCookingView(params, container) {
       const id = el.dataset.stepId;
       const t = timerManager.getTimer(id);
       const btn = el.querySelector('.start-timer-btn');
-      if (btn) btn.disabled = Boolean(t?.running && !t?.done);
+      if (btn) btn.disabled = Boolean(t && !t.done);
     });
     // adjust bottom padding so last step not hidden behind fixed timer tray
     const stepsContainer = container.querySelector('.cooking-mode__steps');
