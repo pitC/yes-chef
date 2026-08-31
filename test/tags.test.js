@@ -51,9 +51,15 @@ describe('tag utilities', () => {
       expect(filtered[0].id).toBe('recipe1');
     });
 
-    it('returns recipes matching ANY tag (OR logic)', () => {
+    it('returns recipes matching ALL tags (AND logic)', () => {
+      const filtered = filterByTags(recipes, ['breakfast', 'vegetarian']);
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].id).toBe('recipe1');
+    });
+
+    it('returns empty when no recipe has all selected tags', () => {
       const filtered = filterByTags(recipes, ['breakfast', 'dinner']);
-      expect(filtered).toHaveLength(3);
+      expect(filtered).toHaveLength(0);
     });
 
     it('returns empty when no match', () => {

@@ -11,7 +11,7 @@ export function filterByTags(recipes, selectedTags) {
     return recipes;
   }
   return recipes.filter((recipe) =>
-    selectedTags.some((tag) => recipe.tags.includes(tag))
+    selectedTags.every((tag) => recipe.tags.includes(tag))
   );
 }
 
