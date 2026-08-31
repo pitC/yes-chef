@@ -34,11 +34,12 @@ export async function renderDetailView(params, container) {
           <span>⏱ ${totalTime} min</span>
           <span>•</span>
           <span>${recipe.servings.base} ${recipe.servings.unit}</span>
+          <span>•</span>
+          <a href="${recipe.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${recipe.sourceName} ↗</a>
           <div class="recipe-card__tags" style="margin-left:auto;">
             ${recipe.tags.map((tag) => `<span class="tag">${tag}</span>`).join('')}
           </div>
         </div>
-        <a href="${recipe.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.85rem; color:var(--color-primary);">${recipe.sourceName} ↗</a>
       </div>
 
       <div style="display:flex; align-items:center; gap:16px; margin:16px 0; background:var(--color-surface); padding:12px 16px; border-radius:12px; box-shadow:var(--shadow-sm);">
