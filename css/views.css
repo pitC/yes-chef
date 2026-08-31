@@ -344,7 +344,7 @@
 }
 
 .cooking-step.active {
-  border-left-color: var(--color-primary);
+  border-left-color: #DB645A;
 }
 
 .cooking-step.done {

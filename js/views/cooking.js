@@ -199,7 +199,7 @@ export async function renderCookingView(params, container) {
         el.style.paddingBottom = '10px';
       } else if (isNext) {
         el.style.opacity = '';
-        el.style.borderLeft = '4px solid var(--color-primary)';
+        el.style.borderLeft = '4px solid #DB645A';
         el.style.paddingTop = '';
         el.style.paddingBottom = '';
       } else {
