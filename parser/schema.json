@@ -1,145 +1,155 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Recipe",
   "type": "object",
-  "required": ["title", "ingredients", "steps"],
+  "title": "Yes Chef Recipe Schema",
+  "required": [
+    "title",
+    "sourceUrl",
+    "sourceName",
+    "tags",
+    "servings",
+    "timing",
+    "ingredients",
+    "steps"
+  ],
   "properties": {
     "id": {
       "type": "string",
-      "description": "Auto-generated document ID"
+      "description": "Auto-generated document ID from Firestore"
     },
     "title": {
       "type": "string",
+      "minLength": 1,
       "description": "Recipe title"
     },
     "sourceUrl": {
       "type": "string",
       "format": "uri",
-      "description": "Original source URL"
+      "description": "Original recipe URL"
     },
     "sourceName": {
       "type": "string",
-      "description": "Source name/publication"
+      "description": "Source website/domain name"
     },
     "tags": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Flat array of dietary and meal-type labels"
+      "description": "Flat array of tags (dietary, meal type, cuisine)"
     },
     "servings": {
       "type": "object",
       "required": ["base", "unit"],
       "properties": {
         "base": {
-          "type": "number",
-          "description": "Base serving count"
+          "type": "integer",
+          "minimum": 1,
+          "description": "Base number of servings"
         },
         "unit": {
           "type": "string",
-          "enum": ["people", "servings"],
-          "description": "Unit for base count"
+          "enum": ["people", "servings", "portions"],
+          "description": "Serving unit"
         }
       }
     },
     "timing": {
       "type": "object",
+      "required": ["prepMinutes", "cookMinutes", "totalMinutes"],
       "properties": {
         "prepMinutes": {
           "type": "integer",
-          "description": "Preparation time in minutes"
+          "minimum": 0
         },
         "cookMinutes": {
           "type": "integer",
-          "description": "Cooking time in minutes"
+          "minimum": 0
         },
         "totalMinutes": {
           "type": "integer",
-          "description": "Total time in minutes"
+          "minimum": 0
         }
-      },
-      "description": "Timing object (optional)"
+      }
     },
     "ingredients": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "amount", "unit"],
+        "required": ["id", "name", "amount", "unit"],
         "properties": {
           "id": {
             "type": "string",
-            "description": "Ingredient ID"
+            "pattern": "^ing_\\d+$",
+            "description": "Auto-generated ingredient ID"
           },
           "name": {
             "type": "string",
-            "description": "Ingredient name"
+            "minLength": 1
           },
           "amount": {
             "type": "number",
-            "description": "Amount relative to servings.base"
+            "minimum": 0
           },
           "unit": {
             "type": "string",
-            "enum": ["g", "kg", "ml", "l", "tsp", "tbsp", "piece", "pinch"],
-            "description": "Unit from closed enum"
+            "enum": ["g", "kg", "ml", "l", "tsp", "tbsp", "piece", "pinch"]
           },
           "notes": {
-            "type": ["string", "null"],
-            "description": "Optional ingredient notes"
+            "type": ["string", "null"]
           }
         }
-      },
-      "description": "List of ingredients"
+      }
     },
     "steps": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["order", "text"],
+        "required": ["id", "order", "text"],
         "properties": {
           "id": {
             "type": "string",
-            "description": "Step ID"
+            "pattern": "^step_\\d+$",
+            "description": "Auto-generated step ID"
           },
           "order": {
             "type": "integer",
-            "description": "Step order number"
+            "minimum": 1
           },
           "text": {
             "type": "string",
-            "description": "Step description"
+            "minLength": 1
           },
           "timer": {
             "type": ["object", "null"],
             "properties": {
               "durationSeconds": {
                 "type": "integer",
-                "description": "Timer duration in seconds"
+                "minimum": 1
               },
               "label": {
                 "type": "string",
-                "description": "Timer label"
+                "minLength": 1
               }
             },
-            "description": "Optional timer per step"
+            "required": ["durationSeconds", "label"]
           },
           "ingredientRefs": {
             "type": "array",
-            "items": { "type": "string" },
-            "description": "Ingredient IDs relevant to this step"
+            "items": {
+              "type": "string",
+              "pattern": "^ing_\\d+$"
+            },
+            "description": "References to ingredient IDs relevant to this step"
           }
         }
-      },
-      "description": "List of cooking steps"
+      }
     },
     "createdAt": {
       "type": "string",
-      "format": "date-time",
-      "description": "Creation timestamp"
+      "format": "date-time"
     },
     "updatedAt": {
       "type": "string",
-      "format": "date-time",
-      "description": "Last update timestamp"
+      "format": "date-time"
     }
   },
   "additionalProperties": false

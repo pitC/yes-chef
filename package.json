@@ -1,0 +1,21 @@
+{
+  "name": "yes-chef",
+  "version": "1.0.0",
+  "description": "A static, installable PWA for capturing recipes, browsing/tagging them, and running a hands-free cooking mode with parallel timers.",
+  "private": true,
+  "scripts": {
+    "lint": "eslint js test",
+    "test": "vitest run",
+    "prepare": "husky"
+  },
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.9.0",
+    "husky": "^9.1.7",
+    "jsdom": "^30.0.1",
+    "vitest": "^4.1.10"
+  }
+}

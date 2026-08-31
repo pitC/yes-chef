@@ -1,9 +1,8 @@
 {
-  "id": "menemen",
-  "title": "Menemen",
+  "title": "Menemen (Turkish Scrambled Eggs with Tomatoes)",
   "sourceUrl": "https://www.theguardian.com/food/2026/aug/29/yotam-ottolenghi-simple-breakfasts-recipes",
-  "sourceName": "The Guardian - Yotam Ottolenghi",
-  "tags": ["breakfast", "vegetarian"],
+  "sourceName": "The Guardian",
+  "tags": ["breakfast", "turkish", "vegetarian", "eggs", "quick"],
   "servings": {
     "base": 2,
     "unit": "people"
@@ -16,58 +15,58 @@
   "ingredients": [
     {
       "id": "ing_1",
-      "name": "eggs",
-      "amount": 4,
-      "unit": "piece",
-      "notes": null
-    },
-    {
-      "id": "ing_2",
       "name": "olive oil",
-      "amount": 3,
+      "amount": 2,
       "unit": "tbsp",
       "notes": null
     },
     {
-      "id": "ing_3",
+      "id": "ing_2",
       "name": "onion",
       "amount": 1,
       "unit": "piece",
-      "notes": "finely chopped (160g)"
+      "notes": "finely chopped"
+    },
+    {
+      "id": "ing_3",
+      "name": "green bell pepper",
+      "amount": 1,
+      "unit": "piece",
+      "notes": "finely chopped"
     },
     {
       "id": "ing_4",
       "name": "garlic",
       "amount": 3,
       "unit": "piece",
-      "notes": "crushed"
+      "notes": "cloves, minced"
     },
     {
       "id": "ing_5",
-      "name": "cumin seeds",
+      "name": "tomato paste",
+      "amount": 1,
+      "unit": "tbsp",
+      "notes": null
+    },
+    {
+      "id": "ing_6",
+      "name": "ground cumin",
       "amount": 1,
       "unit": "tsp",
       "notes": null
     },
     {
-      "id": "ing_6",
-      "name": "Aleppo chilli flakes",
-      "amount": 0.5,
-      "unit": "tsp",
-      "notes": null
-    },
-    {
       "id": "ing_7",
-      "name": "ground cinnamon",
-      "amount": 0.5,
+      "name": "Aleppo chilli flakes",
+      "amount": 1,
       "unit": "tsp",
-      "notes": null
+      "notes": "or regular chilli flakes"
     },
     {
       "id": "ing_8",
-      "name": "tomato paste",
-      "amount": 0.5,
-      "unit": "tbsp",
+      "name": "ground cinnamon",
+      "amount": 0.25,
+      "unit": "tsp",
       "notes": null
     },
     {
@@ -79,56 +78,70 @@
     },
     {
       "id": "ing_10",
-      "name": "double cream",
-      "amount": 1,
-      "unit": "tbsp",
+      "name": "eggs",
+      "amount": 4,
+      "unit": "piece",
       "notes": null
     },
     {
       "id": "ing_11",
-      "name": "coriander leaves",
-      "amount": 5,
-      "unit": "g",
-      "notes": "roughly chopped"
+      "name": "flat-leaf parsley",
+      "amount": 2,
+      "unit": "tbsp",
+      "notes": "chopped"
+    },
+    {
+      "id": "ing_12",
+      "name": "salt",
+      "amount": 0.5,
+      "unit": "tsp",
+      "notes": "or to taste"
+    },
+    {
+      "id": "ing_13",
+      "name": "black pepper",
+      "amount": 0.25,
+      "unit": "tsp",
+      "notes": "freshly ground"
     }
   ],
   "steps": [
     {
       "id": "step_1",
       "order": 1,
-      "text": "Put [eggs] into a bowl with half a teaspoon of salt. Lightly beat, just to break up the yolks, and set aside.",
-      "timer": null,
-      "ingredientRefs": ["ing_1"]
+      "text": "Heat the olive oil in a large non-stick pan over medium heat. Add the [onion] and [green bell pepper] and cook, stirring occasionally, for about 5 minutes until softened.",
+      "timer": { "durationSeconds": 300, "label": "Soften vegetables" },
+      "ingredientRefs": ["ing_2", "ing_3"]
     },
     {
       "id": "step_2",
       "order": 2,
-      "text": "Put the oil into a medium frying pan on a medium-high heat. Add [onion] and [garlic] and cook for five minutes, stirring a few times, until softened and starting to colour.",
-      "timer": { "durationSeconds": 300, "label": "Cook onions" },
-      "ingredientRefs": ["ing_3", "ing_4"]
+      "text": "Add the [garlic], [tomato paste], [ground cumin], [Aleppo chilli flakes], and [ground cinnamon]. Cook, stirring constantly, for 1 minute until fragrant.",
+      "timer": { "durationSeconds": 60, "label": "Bloom spices" },
+      "ingredientRefs": ["ing_4", "ing_5", "ing_6", "ing_7", "ing_8"]
     },
     {
       "id": "step_3",
       "order": 3,
-      "text": "Add the spices, [tomato paste] and an eighth of a teaspoon of salt and cook for two minutes, until fragrant.",
-      "timer": { "durationSeconds": 120, "label": "Cook spices" },
-      "ingredientRefs": ["ing_5", "ing_6", "ing_7", "ing_8"]
+      "text": "Add the [cherry tomatoes] and a pinch of [salt]. Cook, stirring occasionally, for about 8 minutes until the tomatoes break down and release their juices.",
+      "timer": { "durationSeconds": 480, "label": "Cook tomatoes" },
+      "ingredientRefs": ["ing_9", "ing_12"]
     },
     {
       "id": "step_4",
       "order": 4,
-      "text": "Add [cherry tomatoes] and 60ml of water, then cook, uncovered, for 10 minutes until the tomatoes have broken down. Squish them with the back of a spoon if they need a bit of help.",
-      "timer": { "durationSeconds": 600, "label": "Cook tomatoes" },
-      "ingredientRefs": ["ing_9"]
+      "text": "Make 4 wells in the tomato mixture and crack an [egg] into each. Season with [salt] and [black pepper]. Cover and cook for 3-5 minutes until the whites are set but yolks are still runny.",
+      "timer": { "durationSeconds": 240, "label": "Cook eggs" },
+      "ingredientRefs": ["ing_10", "ing_12", "ing_13"]
     },
     {
       "id": "step_5",
       "order": 5,
-      "text": "Remove from the heat and swirl in [eggs], using a wooden spoon or spatula and moving the pan gently until just set. Spoon over the [double cream], sprinkle over [coriander leaves] and serve straight from the pan.",
+      "text": "Remove from heat. Scatter [parsley] over the top. Serve immediately with crusty bread for dipping.",
       "timer": null,
-      "ingredientRefs": ["ing_1", "ing_10", "ing_11"]
+      "ingredientRefs": ["ing_11"]
     }
   ],
-  "createdAt": "2026-08-31T12:00:00Z",
-  "updatedAt": "2026-08-31T12:00:00Z"
+  "createdAt": "2026-08-30T12:00:00Z",
+  "updatedAt": "2026-08-30T12:00:00Z"
 }
