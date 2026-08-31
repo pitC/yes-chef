@@ -55,7 +55,7 @@ describe('timer tray component', () => {
     vi.advanceTimersByTime(1000);
     
     const timerEl = container.querySelector('.timer-item');
-    expect(timerEl.style.backgroundColor).toBe('rgb(108, 175, 135)');
+    expect(timerEl.style.backgroundColor).toBe('rgb(230, 122, 62)');
   });
 
   it('dismiss removes timer from manager', () => {

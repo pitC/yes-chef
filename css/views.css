@@ -454,7 +454,7 @@
 }
 
 .timer-item.done {
-  background: var(--color-success);
+  background: #E67A3E;
   animation: pulse 1s infinite;
 }
 
