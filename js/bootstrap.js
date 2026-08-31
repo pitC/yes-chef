@@ -4,10 +4,27 @@ import { viewManager } from './views/view-manager.js';
 import { renderBrowseView } from './views/browse.js';
 import { renderDetailView } from './views/detail.js';
 import { renderCookingView } from './views/cooking.js';
+import { ensureSyncConfig } from './firestore.js';
 
 console.error('Yes Chef app initializing...');
 
-function init() {
+async function init() {
+  const appEl = document.getElementById('app');
+  const statusEl = document.createElement('div');
+  statusEl.id = 'firestore-status';
+  statusEl.style.display = 'none';
+  if (appEl) appEl.appendChild(statusEl);
+  else document.body.appendChild(statusEl);
+
+  try {
+    await ensureSyncConfig(statusEl);
+  } catch (e) {
+    console.error('[Yes Chef] Firestore setup failed', e);
+  } finally {
+    statusEl.style.display = 'none';
+    statusEl.innerHTML = '';
+  }
+
   viewManager.registerView('browse', { render: renderBrowseView });
   viewManager.registerView('detail', { render: renderDetailView });
   viewManager.registerView('cooking', { render: renderCookingView });

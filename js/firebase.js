@@ -1,14 +1,12 @@
-// Yes Chef - Firebase SDK initialization (unauth, lazy)
 const FIREBASE_VERSION = '12.17.1';
 const firebaseConfig = {
-  apiKey: "AIzaSyD_jSlv9np8EJvgVebvHLxGO-St68ZOwGY",
-  authDomain: "yes-chef-cookbook.firebaseapp.com",
-  projectId: "yes-chef-cookbook",
-  storageBucket: "yes-chef-cookbook.firebasestorage.app",
-  messagingSenderId: "158345618336",
-  appId: "1:158345618336:web:5846633ae0d4d529c13ac5"
+  apiKey: 'AIzaSyD_jSlv9np8EJvgVebvHLxGO-St68ZOwGY',
+  authDomain: 'yes-chef-cookbook.firebaseapp.com',
+  projectId: 'yes-chef-cookbook',
+  storageBucket: 'yes-chef-cookbook.firebasestorage.app',
+  messagingSenderId: '158345618336',
+  appId: '1:158345618336:web:5846633ae0d4d529c13ac5',
 };
-
 
 let firestoreApiPromise = null;
 
