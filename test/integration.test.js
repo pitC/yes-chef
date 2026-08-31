@@ -66,10 +66,10 @@ describe('integration: Browse → Detail → Cooking → Timer flow', () => {
     container.innerHTML = '';
     await renderCookingView({ id: 'menemen' }, container);
     
-    expect(container.querySelectorAll('.cooking-step').length).toBe(5);
+    expect(container.querySelectorAll('.cooking-step').length).toBe(6);
     
     // 6. Start a timer on step 2 (which has a timer)
-    const stepWithTimer = container.querySelectorAll('.cooking-step')[1];
+    const stepWithTimer = container.querySelector('.cooking-step[data-step-id="step_2"]');
     const timerBtn = stepWithTimer.querySelector('.start-timer-btn');
     timerBtn.click();
     
@@ -83,7 +83,7 @@ describe('integration: Browse → Detail → Cooking → Timer flow', () => {
     await renderCookingView({ id: 'menemen' }, container);
     
     // Mark first step as done
-    const firstStep = container.querySelector('.cooking-step');
+    const firstStep = container.querySelector('.cooking-step[data-step-id="step_1"]');
     const checkbox = firstStep.querySelector('.step-done-checkbox');
     checkbox.click();
     

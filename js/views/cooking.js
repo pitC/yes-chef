@@ -8,6 +8,7 @@ import { scheduleNotification } from '../timers/sw-messaging.js';
 
 export const doneSteps = signal(new Set());
 export const activeStepId = signal(null);
+export const prepChecked = signal(new Set());
 
 function loadDoneSteps() {
   const stored = sessionStorage.getItem('doneSteps');
@@ -24,6 +25,21 @@ function saveDoneSteps() {
   }
 }
 
+function loadPrepChecked() {
+  const stored = sessionStorage.getItem('prepChecked');
+  if (stored) {
+    prepChecked.value = new Set(JSON.parse(stored));
+  }
+}
+
+function savePrepChecked() {
+  if (prepChecked.value.size === 0) {
+    sessionStorage.removeItem('prepChecked');
+  } else {
+    sessionStorage.setItem('prepChecked', JSON.stringify(Array.from(prepChecked.value)));
+  }
+}
+
 export async function renderCookingView(params, container) {
   if (!container) container = document.getElementById('app') || document.body;
   const recipe = await getRecipe(params.id);
@@ -33,6 +49,7 @@ export async function renderCookingView(params, container) {
   }
 
   loadDoneSteps();
+  loadPrepChecked();
 
   let observer = null;
   const cleanups = [];
@@ -45,6 +62,24 @@ export async function renderCookingView(params, container) {
           <h1>${recipe.title}</h1>
         </header>
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
+          <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
+            <div class="cooking-step__grid">
+              <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
+              <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
+              <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
+                ${recipe.ingredients.map(ing => {
+                  const isChecked = prepChecked.value.has(ing.id);
+                  const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
+                  return `<li style="display:flex; align-items:center; gap:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                      <input type="checkbox" class="prep-checkbox" data-ing-id="${ing.id}" ${isChecked ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--color-primary);" />
+                      <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${ing.name} · ${ing.amount} ${ing.unit}${notes}</span>
+                    </label>
+                  </li>`;
+                }).join('')}
+              </ul>
+            </div>
+          </div>
           ${recipe.steps.map(step => `
             <div class="cooking-step" data-step-id="${step.id}" style="scroll-snap-align: start;"></div>
           `).join('')}
@@ -54,7 +89,19 @@ export async function renderCookingView(params, container) {
     `;
 
     const stepsContainer = container.querySelector('.cooking-mode__steps');
-    const stepElements = stepsContainer.querySelectorAll('.cooking-step');
+    const stepElements = stepsContainer.querySelectorAll('.cooking-step[data-step-id^="step_"]');
+    const prepElement = stepsContainer.querySelector('.cooking-step--prep');
+    if (prepElement) {
+      prepElement.querySelectorAll('.prep-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const ingId = cb.dataset.ingId;
+          const next = new Set(prepChecked.value);
+          if (cb.checked) next.add(ingId);
+          else next.delete(ingId);
+          prepChecked.value = next;
+        });
+      });
+    }
     
     const ingredientsMap = new Map(recipe.ingredients.map(ing => [ing.id, ing]));
     
@@ -102,7 +149,9 @@ export async function renderCookingView(params, container) {
     const exitBtn = container.querySelector('.exit-cooking-btn');
     exitBtn.addEventListener('click', () => {
       sessionStorage.removeItem('doneSteps');
+      sessionStorage.removeItem('prepChecked');
       doneSteps.value = new Set();
+      prepChecked.value = new Set();
       if (observer) observer.disconnect();
       navigate(`/recipe/${recipe.id}`);
     });
@@ -126,7 +175,7 @@ export async function renderCookingView(params, container) {
     if (!container) return;
     const stepsContainer = container.querySelector('.cooking-mode__steps');
     if (!stepsContainer) return;
-    const stepElements = stepsContainer.querySelectorAll('.cooking-step');
+    const stepElements = stepsContainer.querySelectorAll('.cooking-step:not(.cooking-step--prep)');
     stepElements.forEach((el) => {
       const stepId = el.dataset.stepId;
       const isDone = doneSteps.value.has(stepId);
@@ -173,6 +222,38 @@ export async function renderCookingView(params, container) {
     saveDoneSteps();
   });
   cleanups.push(persist);
+
+  const persistPrep = effect(() => {
+    void prepChecked.value;
+    savePrepChecked();
+  });
+  cleanups.push(persistPrep);
+
+  const refreshPrep = effect(() => {
+    void prepChecked.value;
+    if (!container) return;
+    const prepEl = container.querySelector('.cooking-step--prep');
+    if (!prepEl) return;
+    prepEl.querySelectorAll('.prep-checkbox').forEach(cb => {
+      const ingId = cb.dataset.ingId;
+      const checked = prepChecked.value.has(ingId);
+      cb.checked = checked;
+      const labelSpan = cb.nextElementSibling;
+      if (labelSpan) {
+        labelSpan.style.textDecoration = checked ? 'line-through' : '';
+        labelSpan.style.opacity = checked ? '0.6' : '';
+      }
+    });
+    // optional done styling when all checked
+    const allChecked = recipe.ingredients.every(ing => prepChecked.value.has(ing.id));
+    prepEl.classList.toggle('done', allChecked);
+    if (allChecked) {
+      prepEl.style.opacity = '0.6';
+    } else {
+      prepEl.style.opacity = '';
+    }
+  });
+  cleanups.push(refreshPrep);
 
   const refreshTimers = effect(() => {
     void timerManager.getAllTimers().value;

@@ -32,7 +32,9 @@ describe('cooking view', () => {
     await renderCookingView({ id: 'menemen' }, container);
 
     const steps = container.querySelectorAll('.cooking-step');
-    expect(steps.length).toBe(5);
+    expect(steps.length).toBe(6); // 5 recipe steps + Step 0 prep
+    expect(container.querySelector('.cooking-step--prep')).toBeTruthy();
+    expect(container.querySelector('.prep-checklist')).toBeTruthy();
     expect(container.querySelector('.cooking-mode')).toBeTruthy();
     expect(container.querySelector('.cooking-mode__steps')).toBeTruthy();
   });
@@ -40,7 +42,7 @@ describe('cooking view', () => {
   it('step shows number, text, highlighted ingredients', async () => {
     await renderCookingView({ id: 'menemen' }, container);
 
-    const firstStep = container.querySelector('.cooking-step');
+    const firstStep = container.querySelector('.cooking-step[data-step-id="step_1"]');
     expect(firstStep.textContent).toContain('1');
     expect(firstStep.textContent).toContain('beat');
     expect(firstStep.querySelectorAll('.ingredient-highlight').length).toBeGreaterThan(0);
@@ -50,7 +52,7 @@ describe('cooking view', () => {
   it('mark-done checkbox toggles doneSteps; persists to sessionStorage', async () => {
     await renderCookingView({ id: 'menemen' }, container);
     
-    const firstStep = container.querySelector('.cooking-step');
+    const firstStep = container.querySelector('.cooking-step[data-step-id="step_1"]');
     const checkbox = firstStep.querySelector('.step-done-checkbox');
     checkbox.click();
     
@@ -63,7 +65,7 @@ describe('cooking view', () => {
   it('done steps visually dimmed (opacity 0.6, green border)', async () => {
     await renderCookingView({ id: 'menemen' }, container);
     
-    const firstStep = container.querySelector('.cooking-step');
+    const firstStep = container.querySelector('.cooking-step[data-step-id="step_1"]');
     const checkbox = firstStep.querySelector('.step-done-checkbox');
     checkbox.click();
     
@@ -83,8 +85,7 @@ describe('cooking view', () => {
   it('timer button shows if step.timer exists', async () => {
     await renderCookingView({ id: 'menemen' }, container);
     
-    const steps = container.querySelectorAll('.cooking-step');
-    const stepWithTimer = steps[1]; // step 2 has timer
+    const stepWithTimer = container.querySelector('.cooking-step[data-step-id="step_2"]');
     
     const timerBtn = stepWithTimer.querySelector('.start-timer-btn');
     expect(timerBtn).toBeTruthy();
