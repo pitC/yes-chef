@@ -145,11 +145,20 @@ export async function renderCookingView(params, container) {
           }
         });
       });
+      // initial highlight: prep is active (red) until checked, then step 1 becomes red
+      if (prepDone.value) {
+        prepElement.classList.add('done');
+        prepElement.style.borderLeft = '4px solid var(--color-success)';
+        prepElement.style.opacity = '0.6';
+      } else {
+        prepElement.classList.add('active');
+        prepElement.style.borderLeft = '4px solid #DB645A';
+      }
     }
     
     const ingredientsMap = new Map(recipe.ingredients.map(ing => [ing.id, ing]));
     
-    const nextUpId = recipe.steps.find(s => !doneSteps.value.has(s.id))?.id;
+    const nextUpId = prepDone.value ? recipe.steps.find(s => !doneSteps.value.has(s.id))?.id : null;
     stepElements.forEach((el, index) => {
       const step = recipe.steps[index];
       const isDone = doneSteps.value.has(step.id);
@@ -176,6 +185,23 @@ export async function renderCookingView(params, container) {
           scheduleNotification(stepId, label, duration * 1000).catch(() => {});
         },
       }, el);
+      // initial highlight - mirrors refreshDoneActive so first paint is correct
+      const done = doneSteps.value.has(step.id);
+      const isNext = step.id === nextUpId;
+      el.classList.toggle('done', done);
+      el.classList.toggle('active', isNext);
+      if (done) {
+        el.style.opacity = '0.6';
+        el.style.borderLeft = '4px solid var(--color-success)';
+        el.style.paddingTop = '10px';
+        el.style.paddingBottom = '10px';
+      } else if (isNext) {
+        el.style.opacity = '';
+        el.style.borderLeft = '4px solid #DB645A';
+      } else {
+        el.style.opacity = '';
+        el.style.borderLeft = '4px solid transparent';
+      }
     });
     
     const exitBtn = container.querySelector('.exit-cooking-btn');
@@ -208,7 +234,7 @@ export async function renderCookingView(params, container) {
     if (!container) return;
     const stepsContainer = container.querySelector('.cooking-mode__steps');
     if (!stepsContainer) return;
-    const nextUpId = recipe.steps.find(s => !doneSteps.value.has(s.id))?.id;
+    const nextUpId = prepDone.value ? recipe.steps.find(s => !doneSteps.value.has(s.id))?.id : null;
     const stepElements = stepsContainer.querySelectorAll('.cooking-step:not(.cooking-step--prep)');
     stepElements.forEach((el) => {
       const stepId = el.dataset.stepId;
@@ -284,6 +310,7 @@ export async function renderCookingView(params, container) {
     });
     const isCollapsed = prepDone.value;
     prepEl.classList.toggle('done', isCollapsed);
+    prepEl.classList.toggle('active', !isCollapsed);
     const prepText = prepEl.querySelector('.cooking-step__text');
     const prepList = prepEl.querySelector('.prep-checklist');
     const prepGrid = prepEl.querySelector('.cooking-step__grid');
@@ -297,7 +324,7 @@ export async function renderCookingView(params, container) {
       if (prepGrid) prepGrid.style.gap = '0';
     } else {
       prepEl.style.opacity = '';
-      prepEl.style.borderLeft = '';
+      prepEl.style.borderLeft = '4px solid #DB645A';
       prepEl.style.paddingTop = '';
       prepEl.style.paddingBottom = '';
       if (prepText) prepText.style.display = '';
