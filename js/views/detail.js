@@ -12,11 +12,19 @@ export async function renderDetailView(params, container) {
     return;
   }
 
-  const servings = signal(recipe.servings.base);
+  const storedServings = sessionStorage.getItem(`servings_${recipe.id}`);
+  const initialServings = storedServings ? Number(storedServings) : recipe.servings.base;
+  const servings = signal(initialServings);
 
   const scaledIngredients = computed(() =>
     scaleIngredients(recipe.ingredients, recipe.servings.base, servings.value),
   );
+
+  // persist servings for cooking mode
+  effect(() => {
+    void servings.value;
+    sessionStorage.setItem(`servings_${recipe.id}`, String(servings.value));
+  });
 
   const totalTime =
     recipe.timing?.totalMinutes ||
@@ -44,8 +52,8 @@ export async function renderDetailView(params, container) {
 
       <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin:16px 0; background:var(--color-surface); padding:16px; border-radius:12px; box-shadow:var(--shadow-sm);">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;">
-          <label style="font-weight:600;">Servings</label>
-          <div class="servings-stepper-container"></div>
+          <label style="font-weight:600; display:flex; align-items:center; align-self:center; line-height:1;">Servings</label>
+          <div class="servings-stepper-container" style="display:flex; align-items:center;"></div>
         </div>
         <span style="color:var(--color-text-secondary); font-size:0.72rem; opacity:0.8; text-align:center; display:block; width:100%;">Scales ingredients automatically</span>
       </div>
@@ -65,7 +73,7 @@ export async function renderDetailView(params, container) {
   `;
 
   const stepperContainer = container.querySelector('.servings-stepper-container');
-  renderServingsStepper(recipe.servings.base, (newValue) => {
+  renderServingsStepper(initialServings, (newValue) => {
     servings.value = newValue;
   }, stepperContainer);
 

@@ -5,6 +5,7 @@ import { renderCookingStep } from '../components/cooking-step.js';
 import { renderTimerTray } from '../components/timer-tray.js';
 import { timerManager } from '../timers/manager.js';
 import { scheduleNotification } from '../timers/sw-messaging.js';
+import { scaleIngredients, formatAmount } from '../utils/scaling.js';
 
 export const doneSteps = signal(new Set());
 export const activeStepId = signal(null);
@@ -85,6 +86,10 @@ export async function renderCookingView(params, container) {
   const cleanups = [];
   
   function render() {
+    const stored = sessionStorage.getItem(`servings_${recipe.id}`);
+    const targetServings = stored ? Number(stored) : recipe.servings.base;
+    const scaledIngredients = scaleIngredients(recipe.ingredients, recipe.servings.base, targetServings);
+
     container.innerHTML = `
       <div class="cooking-mode">
         <header class="cooking-mode__header">
@@ -100,13 +105,13 @@ export async function renderCookingView(params, container) {
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
               <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
               <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
-                ${recipe.ingredients.map(ing => {
+                ${scaledIngredients.map(ing => {
                   const isChecked = prepChecked.value.has(ing.id);
                   const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
                   return `<li style="display:flex; align-items:center; gap:8px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
                       <input type="checkbox" class="prep-checkbox" data-ing-id="${ing.id}" ${isChecked ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--color-primary);" />
-                      <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${ing.name} · ${ing.amount} ${ing.unit}${notes}</span>
+                      <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${ing.name} · ${formatAmount(ing.amount)} ${ing.unit}${notes}</span>
                     </label>
                   </li>`;
                 }).join('')}
@@ -156,7 +161,7 @@ export async function renderCookingView(params, container) {
       }
     }
     
-    const ingredientsMap = new Map(recipe.ingredients.map(ing => [ing.id, ing]));
+    const ingredientsMap = new Map(scaledIngredients.map(ing => [ing.id, ing]));
     
     const nextUpId = prepDone.value ? recipe.steps.find(s => !doneSteps.value.has(s.id))?.id : null;
     stepElements.forEach((el, index) => {
