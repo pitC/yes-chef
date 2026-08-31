@@ -18,6 +18,7 @@ export const COMPLETION_MESSAGES = [
   "Chef's kiss 🤌",
   'You cooked 🔥',
   'Bon appétit, chef 🥂',
+  'Heard, chef. Enjoy. 🫡',
 ];
 
 export function pickCompletionMessage() {
