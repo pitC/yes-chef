@@ -263,6 +263,17 @@ export async function renderCookingView(params, container) {
       const btn = el.querySelector('.start-timer-btn');
       if (btn) btn.disabled = Boolean(t?.running && !t?.done);
     });
+    // adjust bottom padding so last step not hidden behind fixed timer tray
+    const stepsContainer = container.querySelector('.cooking-mode__steps');
+    const tray = container.querySelector('.timer-tray');
+    if (stepsContainer) {
+      if (tray) {
+        const trayHeight = tray.getBoundingClientRect().height || 80;
+        stepsContainer.style.paddingBottom = `calc(var(--spacing-md) + ${trayHeight}px + 16px)`;
+      } else {
+        stepsContainer.style.paddingBottom = '';
+      }
+    }
   });
   cleanups.push(refreshTimers);
 

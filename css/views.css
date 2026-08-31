@@ -324,6 +324,7 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-md) + 90px);
   scroll-snap-type: y mandatory;
 }
 
