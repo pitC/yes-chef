@@ -10,6 +10,19 @@ export const doneSteps = signal(new Set());
 export const activeStepId = signal(null);
 export const prepChecked = signal(new Set());
 
+export const COMPLETION_MESSAGES = [
+  'Service! 🔔',
+  'Nice hands, chef 🙌',
+  'Plated and ready 🎉',
+  "Chef's kiss 🤌",
+  'You cooked 🔥',
+  'Bon appétit, chef 🥂',
+];
+
+export function pickCompletionMessage() {
+  return COMPLETION_MESSAGES[Math.floor(Math.random() * COMPLETION_MESSAGES.length)];
+}
+
 function loadDoneSteps() {
   const stored = sessionStorage.getItem('doneSteps');
   if (stored) {
@@ -83,6 +96,7 @@ export async function renderCookingView(params, container) {
           ${recipe.steps.map(step => `
             <div class="cooking-step" data-step-id="${step.id}" style="scroll-snap-align: start;"></div>
           `).join('')}
+          <div class="cooking-complete-banner" style="display:none; text-align:center; padding:28px 16px; margin-top:8px; background:var(--color-surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); font-size:1.5rem; font-weight:700; color:var(--color-primary-dark);"></div>
         </div>
         <div class="timer-tray-container" style="position:relative; z-index:300;"></div>
       </div>
@@ -278,6 +292,34 @@ export async function renderCookingView(params, container) {
   cleanups.push(refreshTimers);
 
   render();
+
+  const completionBanner = effect(() => {
+    void doneSteps.value;
+    if (!container) return;
+    const banner = container.querySelector('.cooking-complete-banner');
+    if (!banner) return;
+    const allDone = recipe.steps.length > 0 && recipe.steps.every(s => doneSteps.value.has(s.id));
+    if (allDone) {
+      if (banner.style.display === 'none' || !banner.textContent) {
+        banner.textContent = pickCompletionMessage();
+      }
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  });
+  cleanups.push(completionBanner);
+  // initial check after first render in case all steps already done (persisted)
+  {
+    const banner = container.querySelector('.cooking-complete-banner');
+    if (banner) {
+      const allDone = recipe.steps.length > 0 && recipe.steps.every(s => doneSteps.value.has(s.id));
+      if (allDone) {
+        banner.textContent = pickCompletionMessage();
+        banner.style.display = 'block';
+      }
+    }
+  }
 
   return () => {
     if (observer) observer.disconnect();
