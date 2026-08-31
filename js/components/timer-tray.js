@@ -104,7 +104,13 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
     }
     const dismissBtn = e.target.closest('.timer-dismiss');
     if (dismissBtn) {
-      pendingId = dismissBtn.dataset.id;
+      const id = dismissBtn.dataset.id;
+      const timer = timersSignal.value.find(t => t.id === id);
+      if (timer?.done) {
+        onDismiss(id);
+        return;
+      }
+      pendingId = id;
       render();
     }
   });
