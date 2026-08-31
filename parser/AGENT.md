@@ -60,20 +60,28 @@ Key parsing decisions for Menemen:
 
 ### 7. Running the agent
 
+The agent itself fetches, parses, and normalizes recipe web pages, writing JSON matching `parser/schema.json`. At the end, validate the output:
+
 ```bash
 # From yeschef root
-python3 parse.py https://example.com/recipe
+python3 -c "
+import json, jsonschema
+with open('parser/<recipe-id>.json') as f:
+    data = json.load(f)
+with open('parser/schema.json') as f:
+    schema = json.load(f)
+if jsonschema.validate(data, schema):
+    print('VALID: <recipe-id>.json conforms to schema.json')
+else:
+    print('INVALID')
+"
 ```
 
-The script will:
+The agent will:
 1. Fetch and parse the page
 2. Extract recipe fields per the schema
-3. Normalize all units to the closed enum
-4. Write `parser/<recipe-id>.json`
-5. Print a validation report
+3. Normalize all units to the closed enum: `g, kg, ml, l, tsp, tbsp, piece, pinch`
+4. Write `<recipe-id>.json` to `parser/`
+5. Exit with status 0 on success
+"
 
-### 8. Known limitations
-
-- Recipe capture, parsing, and unit translation are **not built into the app** — a separate desktop agent handles this (per project plan out-of-scope for v1)
-- Pages without schema.org/Recipe markup require custom parsing logic per domain
-- Spice unit normalization: anything tsp/tbsp stays; everything else gets mapped to the closest enum value
