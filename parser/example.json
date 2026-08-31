@@ -109,6 +109,7 @@
     {
       "id": "step_1",
       "order": 1,
+      "title": "Soften vegetables",
       "text": "Heat the olive oil in a large non-stick pan over medium heat. Add the [onion] and [green bell pepper] and cook, stirring occasionally, for about 5 minutes until softened.",
       "timer": { "durationSeconds": 300, "label": "Soften vegetables" },
       "ingredientRefs": ["ing_2", "ing_3"]
@@ -116,6 +117,7 @@
     {
       "id": "step_2",
       "order": 2,
+      "title": "Bloom spices",
       "text": "Add the [garlic], [tomato paste], [ground cumin], [Aleppo chilli flakes], and [ground cinnamon]. Cook, stirring constantly, for 1 minute until fragrant.",
       "timer": { "durationSeconds": 60, "label": "Bloom spices" },
       "ingredientRefs": ["ing_4", "ing_5", "ing_6", "ing_7", "ing_8"]
@@ -123,6 +125,7 @@
     {
       "id": "step_3",
       "order": 3,
+      "title": "Cook tomatoes",
       "text": "Add the [cherry tomatoes] and a pinch of [salt]. Cook, stirring occasionally, for about 8 minutes until the tomatoes break down and release their juices.",
       "timer": { "durationSeconds": 480, "label": "Cook tomatoes" },
       "ingredientRefs": ["ing_9", "ing_12"]
@@ -130,6 +133,7 @@
     {
       "id": "step_4",
       "order": 4,
+      "title": "Cook eggs",
       "text": "Make 4 wells in the tomato mixture and crack an [egg] into each. Season with [salt] and [black pepper]. Cover and cook for 3-5 minutes until the whites are set but yolks are still runny.",
       "timer": { "durationSeconds": 240, "label": "Cook eggs" },
       "ingredientRefs": ["ing_10", "ing_12", "ing_13"]
@@ -137,6 +141,7 @@
     {
       "id": "step_5",
       "order": 5,
+      "title": "Garnish and serve",
       "text": "Remove from heat. Scatter [parsley] over the top. Serve immediately with crusty bread for dipping.",
       "timer": null,
       "ingredientRefs": ["ing_11"]

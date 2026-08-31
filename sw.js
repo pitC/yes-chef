@@ -1,5 +1,5 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v1';
+const CACHE_NAME = 'yes-chef-v12';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,24 @@ const STATIC_ASSETS = [
   '/css/base.css',
   '/css/views.css',
   '/js/bootstrap.js',
+  '/js/signals.js',
+  '/js/router.js',
+  '/js/data/recipes.js',
+  '/js/types/recipe.js',
+  '/js/utils/scaling.js',
+  '/js/utils/tags.js',
+  '/js/views/view-manager.js',
+  '/js/views/browse.js',
+  '/js/views/detail.js',
+  '/js/views/cooking.js',
+  '/js/views/empty-states.js',
+  '/js/components/recipe-card.js',
+  '/js/components/servings-stepper.js',
+  '/js/components/cooking-step.js',
+  '/js/components/timer-tray.js',
+  '/js/timers/timer.js',
+  '/js/timers/manager.js',
+  '/js/timers/sw-messaging.js',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',
 ];
@@ -72,7 +90,7 @@ self.addEventListener('fetch', (event) => {
 // Handle timer notifications
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SCHEDULE_TIMER') {
-    const { timerId, label, delay } = event.data;
+    const { timerId, label, delayMs } = event.data;
     setTimeout(() => {
       self.registration.showNotification('Timer Complete', {
         body: `${label} is ready!`,
@@ -84,7 +102,7 @@ self.addEventListener('message', (event) => {
           { action: 'dismiss', title: 'Dismiss' },
         ],
       });
-    }, delay);
+    }, delayMs);
   }
 });
 

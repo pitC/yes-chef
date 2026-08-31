@@ -338,13 +338,27 @@
   transition: border-color 0.2s ease;
 }
 
+.cooking-step__ingredients-meta span {
+  white-space: nowrap;
+}
+
 .cooking-step.active {
   border-left-color: var(--color-primary);
 }
 
 .cooking-step.done {
-  opacity: 0.6;
+  opacity: 0.7;
   border-left-color: var(--color-success);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.cooking-step.done .cooking-step__text,
+.cooking-step.done .cooking-step__ingredients-meta,
+.cooking-step.done .step-timer {
+  display: none !important;
+}
+.cooking-step.done .cooking-step__grid {
+  gap: 0;
 }
 
 .cooking-step__header {
@@ -551,6 +565,64 @@
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Ingredient highlight in step text */
+.ingredient-highlight {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.92em;
+  white-space: nowrap;
+}
+
+.cooking-step__grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "check number"
+    "text text"
+    "meta meta"
+    "timer timer";
+  gap: 6px 12px;
+  align-items: center;
+}
+.cooking-step__grid .cooking-step__check {
+  grid-area: check;
+}
+.cooking-step__grid .cooking-step__number {
+  grid-area: number;
+  justify-self: end;
+  align-self: center;
+}
+.cooking-step__grid .cooking-step__text {
+  grid-area: text;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.cooking-step__grid .cooking-step__ingredients-meta {
+  grid-area: meta;
+}
+.cooking-step__grid .step-timer {
+  grid-area: timer;
+}
+@media (min-width: 1024px) {
+  .cooking-step__grid {
+    grid-template-columns: 28px 1fr;
+    grid-template-areas:
+      "number number"
+      "check text"
+      "meta meta"
+      "timer timer";
+    align-items: start;
+  }
+  .cooking-step__grid .cooking-step__check {
+    margin-top: 4px;
+  }
 }
 
 /* Utility */

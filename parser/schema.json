@@ -104,6 +104,10 @@
             "type": "integer",
             "description": "Step order number"
           },
+          "title": {
+            "type": "string",
+            "description": "Short title for quick reference (e.g., 'Soften onions'), displayed alongside step number and when collapsed"
+          },
           "text": {
             "type": "string",
             "description": "Step description"
