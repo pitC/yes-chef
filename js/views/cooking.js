@@ -189,7 +189,7 @@ export async function renderCookingView(params, container) {
       const num = el.querySelector('.cooking-step__number');
       if (num?.dataset.order) {
         const title = num.dataset.title;
-        num.textContent = `Step ${num.dataset.order} · ${title}${isDone ? ' · ✓ Done' : ''}`;
+        num.textContent = `Step ${num.dataset.order} · ${title}`;
       }
 
       if (isDone) {

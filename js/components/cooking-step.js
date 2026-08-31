@@ -33,7 +33,7 @@ export function renderCookingStep(step, ingredients, { isDone, isTimerRunning = 
       <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center;">
         <input type="checkbox" class="step-done-checkbox" ${isDone ? 'checked' : ''} aria-label="Mark step as done" style="width:20px; height:20px; accent-color:var(--color-primary); cursor:pointer;" />
       </label>
-      <span class="cooking-step__number" data-order="${step.order}" data-title="${title.replace(/"/g, '&quot;')}" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step ${step.order} · ${title}${isDone ? ' · ✓ Done' : ''}</span>
+      <span class="cooking-step__number" data-order="${step.order}" data-title="${title.replace(/"/g, '&quot;')}" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step ${step.order} · ${title}</span>
       <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">${highlight(step.text)}</div>
       ${sizingHtml ? `<div class="cooking-step__ingredients-meta" style="font-size:0.82rem; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:2px; border-top:1px dashed var(--color-border); padding-top:6px; margin-top:8px;">${sizingHtml}</div>` : ''}
       <div class="step-timer" style="margin-top:6px;">${timerHtml}</div>
