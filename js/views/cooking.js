@@ -185,14 +185,8 @@ export async function renderCookingView(params, container) {
       el.classList.toggle('done', isDone);
       el.classList.toggle('active', isNext);
 
-      // collapse to save space - hide body, keep header
-      const text = el.querySelector('.cooking-step__text');
-      const meta = el.querySelector('.cooking-step__ingredients-meta');
-      const timer = el.querySelector('.step-timer');
+      // collapse is handled by CSS .done class (display:none !important) - inline display removed
       const num = el.querySelector('.cooking-step__number');
-      if (text) text.style.display = isDone ? 'none' : '';
-      if (meta) meta.style.display = isDone ? 'none' : '';
-      if (timer) timer.style.display = isDone ? 'none' : '';
       if (num?.dataset.order) {
         const title = num.dataset.title;
         num.textContent = `Step ${num.dataset.order} · ${title}${isDone ? ' · ✓ Done' : ''}`;
