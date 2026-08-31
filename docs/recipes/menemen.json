@@ -118,7 +118,7 @@
       "id": "step_4",
       "order": 4,
       "text": "Add the tomatoes and 60ml of water, then cook, uncovered, for 10 minutes until the tomatoes have broken down. Squish them with the back of a spoon if they need a bit of help.",
-      "timer": null,
+      "timer": { "durationSeconds": 600, "label": "Cook tomatoes" },
       "ingredientRefs": ["ing_9"]
     },
     {
