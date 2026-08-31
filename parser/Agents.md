@@ -84,5 +84,3 @@ The agent will:
 3. Normalize all units to the closed enum: `g, kg, ml, l, tsp, tbsp, piece, pinch`
 4. Write `<recipe-id>.json` to `parser/`
 5. Exit with status 0 on success
-"
-
