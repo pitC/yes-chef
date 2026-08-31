@@ -64,7 +64,6 @@ export async function renderCookingView(params, container) {
   loadDoneSteps();
   loadPrepChecked();
 
-  let observer = null;
   const cleanups = [];
   
   function render() {
@@ -119,10 +118,11 @@ export async function renderCookingView(params, container) {
     
     const ingredientsMap = new Map(recipe.ingredients.map(ing => [ing.id, ing]));
     
+    const nextUpId = recipe.steps.find(s => !doneSteps.value.has(s.id))?.id;
     stepElements.forEach((el, index) => {
       const step = recipe.steps[index];
       const isDone = doneSteps.value.has(step.id);
-      const isActive = activeStepId.value === step.id;
+      const isActive = step.id === nextUpId;
       const existingTimer = timerManager.getTimer(step.id);
       const isTimerRunning = Boolean(existingTimer?.running && !existingTimer?.done);
 
@@ -147,24 +147,12 @@ export async function renderCookingView(params, container) {
       }, el);
     });
     
-    if (observer) observer.disconnect();
-    observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          activeStepId.value = entry.target.dataset.stepId;
-        }
-      });
-    }, { root: stepsContainer, threshold: 0.5 });
-    
-    stepElements.forEach(el => observer.observe(el));
-    
     const exitBtn = container.querySelector('.exit-cooking-btn');
     exitBtn.addEventListener('click', () => {
       sessionStorage.removeItem('doneSteps');
       sessionStorage.removeItem('prepChecked');
       doneSteps.value = new Set();
       prepChecked.value = new Set();
-      if (observer) observer.disconnect();
       navigate(`/recipe/${recipe.id}`);
     });
 
@@ -187,14 +175,15 @@ export async function renderCookingView(params, container) {
     if (!container) return;
     const stepsContainer = container.querySelector('.cooking-mode__steps');
     if (!stepsContainer) return;
+    const nextUpId = recipe.steps.find(s => !doneSteps.value.has(s.id))?.id;
     const stepElements = stepsContainer.querySelectorAll('.cooking-step:not(.cooking-step--prep)');
     stepElements.forEach((el) => {
       const stepId = el.dataset.stepId;
       const isDone = doneSteps.value.has(stepId);
-      const isActive = activeStepId.value === stepId;
+      const isNext = stepId === nextUpId;
 
       el.classList.toggle('done', isDone);
-      el.classList.toggle('active', isActive);
+      el.classList.toggle('active', isNext);
 
       // collapse to save space - hide body, keep header
       const text = el.querySelector('.cooking-step__text');
@@ -211,18 +200,19 @@ export async function renderCookingView(params, container) {
 
       if (isDone) {
         el.style.opacity = '0.6';
-        el.style.borderLeft = '4px solid green';
+        el.style.borderLeft = '4px solid var(--color-success)';
         el.style.paddingTop = '10px';
         el.style.paddingBottom = '10px';
-      } else {
+      } else if (isNext) {
         el.style.opacity = '';
-        el.style.borderLeft = '';
+        el.style.borderLeft = '4px solid var(--color-primary)';
         el.style.paddingTop = '';
         el.style.paddingBottom = '';
-      }
-
-      if (isActive) {
-        el.style.borderLeft = '4px solid green';
+      } else {
+        el.style.opacity = '';
+        el.style.borderLeft = '4px solid transparent';
+        el.style.paddingTop = '';
+        el.style.paddingBottom = '';
       }
     });
   });
@@ -322,7 +312,6 @@ export async function renderCookingView(params, container) {
   }
 
   return () => {
-    if (observer) observer.disconnect();
     cleanups.forEach((fn) => {
       if (typeof fn === 'function') fn();
     });
