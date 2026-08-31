@@ -22,9 +22,12 @@ export function renderCookingStep(step, ingredients, { isDone, isTimerRunning = 
       const ing = ingredientsMap.get(ref);
       if (!ing) return '';
       const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
-      return `<span>${ing.name} · ${ing.amount} ${ing.unit}${notes}</span>`;
+      return `<div class="cooking-step__ingredient-row" style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 0;">`
+        + `<span>${ing.name}</span>`
+        + `<span style="font-variant-numeric:tabular-nums; white-space:nowrap;">${ing.amount} ${ing.unit}${notes}</span>`
+        + `</div>`;
     })
-    .join(' · ');
+    .join('');
 
   container.innerHTML = `
     <div class="cooking-step__grid">
@@ -33,7 +36,7 @@ export function renderCookingStep(step, ingredients, { isDone, isTimerRunning = 
       </label>
       <span class="cooking-step__number" data-order="${step.order}" data-title="${title.replace(/"/g, '&quot;')}" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step ${step.order} · ${title}${isDone ? ' · ✓ Done' : ''}</span>
       <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">${highlight(step.text)}</div>
-      ${sizingHtml ? `<div class="cooking-step__ingredients-meta" style="font-size:0.82rem; color:var(--color-text-secondary); display:flex; flex-wrap:wrap; gap:4px 10px; border-top:1px dashed var(--color-border); padding-top:6px; margin-top:8px;">${sizingHtml}</div>` : ''}
+      ${sizingHtml ? `<div class="cooking-step__ingredients-meta" style="font-size:0.82rem; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:2px; border-top:1px dashed var(--color-border); padding-top:6px; margin-top:8px;">${sizingHtml}</div>` : ''}
       <div class="step-timer" style="margin-top:6px;">${timerHtml}</div>
     </div>
   `;
