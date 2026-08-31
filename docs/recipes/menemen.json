@@ -98,20 +98,20 @@
       "order": 1,
       "text": "Put the eggs into a bowl with half a teaspoon of salt. Lightly beat, just to break up the yolks, and set aside.",
       "timer": null,
-      "ingredientRefs": []
+      "ingredientRefs": ["ing_1"]
     },
     {
       "id": "step_2",
       "order": 2,
       "text": "Put the oil into a medium frying pan on a medium-high heat. Add the onion and garlic and cook for five minutes, stirring a few times, until softened and starting to colour.",
-      "timer": null,
+      "timer": { "durationSeconds": 300, "label": "Cook onions" },
       "ingredientRefs": ["ing_3", "ing_4"]
     },
     {
       "id": "step_3",
       "order": 3,
       "text": "Add the spices, tomato paste and an eighth of a teaspoon of salt and cook for two minutes, until fragrant.",
-      "timer": null,
+      "timer": { "durationSeconds": 120, "label": "Cook spices" },
       "ingredientRefs": ["ing_5", "ing_6", "ing_7", "ing_8"]
     },
     {
