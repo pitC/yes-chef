@@ -9,7 +9,6 @@ describe('timer tray component', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     vi.useFakeTimers();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     
     // Clear timers
     const timers = timerManager.getAllTimers();
@@ -60,7 +59,7 @@ describe('timer tray component', () => {
     expect(timerEl.style.backgroundColor).toBe('rgb(230, 122, 62)');
   });
 
-  it('dismiss removes timer from manager', () => {
+  it('dismiss asks confirmation via custom dialog', () => {
     timerManager.startTimer({ id: '1', label: 'Test Timer', durationSeconds: 65 });
     
     renderTimerTray(timerManager.getAllTimers(), { 
@@ -72,12 +71,16 @@ describe('timer tray component', () => {
     const dismissBtn = container.querySelector('.timer-dismiss');
     dismissBtn.click();
     
-    expect(window.confirm).toHaveBeenCalledWith('Close this timer?');
+    const dialog = container.querySelector('.timer-confirm-dialog');
+    expect(dialog).toBeTruthy();
+    expect(dialog.textContent).toContain('Close timer?');
+    expect(timerManager.getAllTimers().value.length).toBe(1);
+    
+    container.querySelector('.timer-confirm-ok').click();
     expect(timerManager.getAllTimers().value.length).toBe(0);
   });
 
-  it('dismiss cancelled when confirm returns false', () => {
-    window.confirm.mockReturnValue(false);
+  it('dismiss cancelled when cancel clicked', () => {
     timerManager.startTimer({ id: '1', label: 'Test Timer', durationSeconds: 65 });
     
     renderTimerTray(timerManager.getAllTimers(), { 
@@ -89,7 +92,10 @@ describe('timer tray component', () => {
     const dismissBtn = container.querySelector('.timer-dismiss');
     dismissBtn.click();
     
-    expect(window.confirm).toHaveBeenCalledWith('Close this timer?');
+    expect(container.querySelector('.timer-confirm-dialog')).toBeTruthy();
+    container.querySelector('.timer-confirm-cancel').click();
+    
     expect(timerManager.getAllTimers().value.length).toBe(1);
+    expect(container.querySelector('.timer-confirm-dialog')).toBeFalsy();
   });
 });

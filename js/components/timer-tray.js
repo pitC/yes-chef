@@ -4,20 +4,26 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
+
+  let pendingId = null;
   
   function render() {
     const activeTimers = timersSignal.value.filter(t => !t.done);
     const doneTimers = timersSignal.value.filter(t => t.done);
     const allTimers = [...activeTimers, ...doneTimers];
 
-    if (allTimers.length === 0) {
+    if (allTimers.length === 0 && !pendingId) {
       container.style.display = 'none';
       container.innerHTML = '';
       return;
     }
 
-    container.style.display = 'block';
-    container.innerHTML = `
+    // if all timers gone but modal still pending, keep container visible for modal
+    if (allTimers.length === 0 && pendingId) {
+      pendingId = null;
+    }
+
+    const timerList = allTimers.length ? `
       <div class="timer-tray" style="position:fixed; bottom:0; left:0; right:0; z-index:500;">
         <div class="timer-tray__list">
         ${allTimers.map(timer => `
@@ -30,7 +36,24 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
         `).join('')}
         </div>
       </div>
-    `;
+    ` : '';
+
+    const pendingTimer = pendingId ? allTimers.find(t => t.id === pendingId) || { label: 'this timer' } : null;
+    const modal = pendingId ? `
+      <div class="timer-confirm-backdrop" style="position:fixed; inset:0; background:rgba(43,43,43,0.45); display:flex; align-items:center; justify-content:center; z-index:600; padding:16px;">
+        <div class="timer-confirm-dialog" role="dialog" aria-modal="true" aria-label="Confirm close timer" style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); padding:20px; max-width:340px; width:100%; text-align:center;">
+          <p style="margin:0 0 8px; font-weight:600; color:var(--color-text);">Close timer?</p>
+          <p style="margin:0 0 16px; font-size:0.9rem; color:var(--color-text-secondary);">“${pendingTimer.label}” will be removed.</p>
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button class="timer-confirm-cancel btn btn--secondary" style="flex:1;">Cancel</button>
+            <button class="timer-confirm-ok btn btn--primary" style="flex:1; background:#DB645A; border-color:#DB645A;">Close</button>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    container.style.display = allTimers.length || pendingId ? 'block' : 'none';
+    container.innerHTML = `${timerList}${modal}`;
     // equalize timer boxes to longest label width and keep grid alignment
     {
       const items = container.querySelectorAll('.timer-item');
@@ -49,6 +72,25 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
 
   // Use delegation so buttons stay clickable across re-renders
   container.addEventListener('click', (e) => {
+    const confirmOk = e.target.closest('.timer-confirm-ok');
+    if (confirmOk) {
+      const id = pendingId;
+      pendingId = null;
+      onDismiss(id);
+      return;
+    }
+    const confirmCancel = e.target.closest('.timer-confirm-cancel');
+    if (confirmCancel) {
+      pendingId = null;
+      render();
+      return;
+    }
+    const backdrop = e.target.closest('.timer-confirm-backdrop');
+    if (backdrop && !e.target.closest('.timer-confirm-dialog')) {
+      pendingId = null;
+      render();
+      return;
+    }
     const pauseBtn = e.target.closest('.timer-pause');
     if (pauseBtn) {
       const id = pauseBtn.dataset.id;
@@ -62,15 +104,8 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
     }
     const dismissBtn = e.target.closest('.timer-dismiss');
     if (dismissBtn) {
-      try {
-        if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-          // eslint-disable-next-line no-alert
-          if (!window.confirm('Close this timer?')) return;
-        }
-      } catch {
-        // jsdom without confirm implementation - proceed
-      }
-      onDismiss(dismissBtn.dataset.id);
+      pendingId = dismissBtn.dataset.id;
+      render();
     }
   });
 
