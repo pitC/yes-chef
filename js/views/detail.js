@@ -42,10 +42,12 @@ export async function renderDetailView(params, container) {
         </div>
       </div>
 
-      <div style="display:flex; align-items:center; gap:16px; margin:16px 0; background:var(--color-surface); padding:12px 16px; border-radius:12px; box-shadow:var(--shadow-sm);">
-        <label style="font-weight:600;">Servings</label>
-        <div class="servings-stepper-container"></div>
-        <span style="color:var(--color-text-secondary); font-size:0.9rem; margin-left:auto;">Scales ingredients automatically</span>
+      <div style="display:flex; flex-direction:column; gap:6px; margin:16px 0; background:var(--color-surface); padding:12px 16px; border-radius:12px; box-shadow:var(--shadow-sm);">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <label style="font-weight:600;">Servings</label>
+          <div class="servings-stepper-container"></div>
+        </div>
+        <span style="color:var(--color-text-secondary); font-size:0.75rem; text-align:center; opacity:0.85;">Scales ingredients automatically</span>
       </div>
 
       <section style="background:var(--color-surface); border-radius:12px; box-shadow:var(--shadow-sm); padding:16px; margin-bottom:16px;">
