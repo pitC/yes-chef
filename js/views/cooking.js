@@ -93,7 +93,7 @@ export async function renderCookingView(params, container) {
     container.innerHTML = `
       <div class="cooking-mode">
         <header class="cooking-mode__header">
-          <button class="exit-cooking-btn btn btn--secondary" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
+          <button class="exit-cooking-btn btn btn--ghost" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
           <h1 title="${recipe.title.replace(/"/g, '&quot;')}">${recipe.title}</h1>
         </header>
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
@@ -150,14 +150,14 @@ export async function renderCookingView(params, container) {
           }
         });
       });
-      // initial highlight: prep is active (red) until checked, then step 1 becomes red
+      // initial highlight: prep is active (teal) until checked, then step 1 becomes active
       if (prepDone.value) {
         prepElement.classList.add('done');
         prepElement.style.borderLeft = '4px solid var(--color-success)';
         prepElement.style.opacity = '0.6';
       } else {
         prepElement.classList.add('active');
-        prepElement.style.borderLeft = '4px solid #DB645A';
+        prepElement.style.borderLeft = '4px solid var(--color-primary-dark)';
       }
     }
     
@@ -202,7 +202,7 @@ export async function renderCookingView(params, container) {
         el.style.paddingBottom = '10px';
       } else if (isNext) {
         el.style.opacity = '';
-        el.style.borderLeft = '4px solid #DB645A';
+        el.style.borderLeft = '4px solid var(--color-primary-dark)';
       } else {
         el.style.opacity = '';
         el.style.borderLeft = '4px solid transparent';
@@ -264,7 +264,7 @@ export async function renderCookingView(params, container) {
         el.style.paddingBottom = '10px';
       } else if (isNext) {
         el.style.opacity = '';
-        el.style.borderLeft = '4px solid #DB645A';
+        el.style.borderLeft = '4px solid var(--color-primary-dark)';
         el.style.paddingTop = '';
         el.style.paddingBottom = '';
       } else {
@@ -330,7 +330,7 @@ export async function renderCookingView(params, container) {
       if (prepGrid) prepGrid.style.gap = '0';
     } else {
       prepEl.style.opacity = '';
-      prepEl.style.borderLeft = '4px solid #DB645A';
+      prepEl.style.borderLeft = '4px solid var(--color-primary-dark)';
       prepEl.style.paddingTop = '';
       prepEl.style.paddingBottom = '';
       if (prepText) prepText.style.display = '';
