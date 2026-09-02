@@ -42,6 +42,16 @@ export async function renderDetailView(params, container) {
     recipe.timing?.totalMinutes ||
     (recipe.timing?.prepMinutes || 0) + (recipe.timing?.cookMinutes || 0);
 
+  const sourceUrl = typeof recipe.sourceUrl === 'string' ? recipe.sourceUrl.trim() : '';
+  const sourceName = typeof recipe.sourceName === 'string' ? recipe.sourceName.trim() : '';
+  let sourceMarkup = '';
+  if (sourceUrl) {
+    const label = sourceName || sourceUrl;
+    sourceMarkup = `<span>•</span><a href="${sourceUrl}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${label} ↗</a>`;
+  } else if (sourceName) {
+    sourceMarkup = `<span>•</span><span style="font-size:0.9rem; color:var(--color-primary);">${sourceName}</span>`;
+  }
+
   container.innerHTML = `
     <header class="app-header">
       <button class="btn btn--ghost back-btn" aria-label="Back to browse">← Back</button>
@@ -54,8 +64,7 @@ export async function renderDetailView(params, container) {
           <span>⏱ ${totalTime} min</span>
           <span>•</span>
           <span>${recipe.servings.base} ${recipe.servings.unit}</span>
-          <span>•</span>
-          <a href="${recipe.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${recipe.sourceName} ↗</a>
+          ${sourceMarkup}
           <div class="recipe-card__tags" style="margin-left:auto;">
             ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
           </div>
