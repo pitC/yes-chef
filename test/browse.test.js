@@ -20,12 +20,14 @@ describe('browse view', () => {
     container.id = 'app';
     document.body.appendChild(container);
     vi.useFakeTimers();
+    sessionStorage.clear();
   });
 
   afterEach(() => {
     document.body.removeChild(container);
     vi.useRealTimers();
     vi.restoreAllMocks();
+    sessionStorage.clear();
   });
 
   it('renders recipe cards for all recipes', async () => {
@@ -97,6 +99,52 @@ describe('browse view', () => {
     card.click();
     
     expect(navigate).toHaveBeenCalledWith('/recipe/menemen');
+  });
+
+  it('saves and restores browse state (search, tags, scroll) via sessionStorage', async () => {
+    await import('../js/router.js');
+    
+    await renderBrowseView({}, container);
+    
+    const searchInput = container.querySelector('input[type="search"]');
+    searchInput.value = 'men';
+    searchInput.dispatchEvent(new Event('input'));
+    
+    const tagChips = container.querySelectorAll('.tag-chip');
+    tagChips[0].click();
+    
+    vi.advanceTimersByTime(150);
+    
+    const card = container.querySelector('.recipe-card');
+    card.click();
+    
+    const storedState = sessionStorage.getItem('browse_view_state');
+    expect(storedState).toBeTruthy();
+    const state = JSON.parse(storedState);
+    expect(state.search).toBe('men');
+    expect(state.tags).toContain(tagChips[0].dataset.tag);
+    expect(state.scrollY).toBe(0);
+  });
+
+  it('restores browse state when re-rendering', async () => {
+    const { navigate } = await import('../js/router.js');
+    
+    const state = {
+      search: 'restored search',
+      tags: ['breakfast'],
+      scrollY: 100
+    };
+    sessionStorage.setItem('browse_view_state', JSON.stringify(state));
+    
+    await renderBrowseView({}, container);
+    
+    const searchInput = container.querySelector('input[type="search"]');
+    expect(searchInput.value).toBe('restored search');
+    
+    const tagChips = container.querySelectorAll('.tag-chip');
+    const breakfastChip = Array.from(tagChips).find(c => c.dataset.tag === 'breakfast');
+    expect(breakfastChip).toBeTruthy();
+    expect(breakfastChip.classList.contains('selected')).toBe(true);
   });
 });
 

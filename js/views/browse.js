@@ -4,12 +4,44 @@ import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderRecipeCard } from '../components/recipe-card.js';
 
+const BROWSE_STATE_KEY = 'browse_view_state';
+
+function saveBrowseState(search, tags, scrollY) {
+  try {
+    sessionStorage.setItem(
+      BROWSE_STATE_KEY,
+      JSON.stringify({ search, tags: Array.from(tags), scrollY }),
+    );
+  } catch (e) {
+    // ignore
+  }
+}
+
+function loadBrowseState() {
+  try {
+    const stored = sessionStorage.getItem(BROWSE_STATE_KEY);
+    if (stored) {
+      const state = JSON.parse(stored);
+      return {
+        search: state.search || '',
+        tags: new Set(state.tags || []),
+        scrollY: state.scrollY || 0,
+      };
+    }
+  } catch (e) {
+    // ignore
+  }
+  return { search: '', tags: new Set(), scrollY: 0 };
+}
+
+
 export async function renderBrowseView(params, container) {
   const recipes = await getRecipes();
   const allTags = extractAllTags(recipes);
 
-  const searchQuery = signal('');
-  const selectedTags = signal(new Set());
+  const loadedState = loadBrowseState();
+  const searchQuery = signal(loadedState.search);
+  const selectedTags = signal(new Set(loadedState.tags));
   const debouncedQuery = signal('');
 
   let debounceTimer = null;
@@ -52,6 +84,8 @@ export async function renderBrowseView(params, container) {
 
   const tagChips = container.querySelectorAll('.filter-chip');
   tagChips.forEach((chip) => {
+    chip.classList.toggle('active', selectedTags.value.has(chip.dataset.tag));
+    chip.classList.toggle('selected', selectedTags.value.has(chip.dataset.tag));
     chip.addEventListener('click', () => {
       const tag = chip.dataset.tag;
       const newSelected = new Set(selectedTags.value);
@@ -65,6 +99,17 @@ export async function renderBrowseView(params, container) {
       chip.classList.toggle('selected', newSelected.has(tag));
     });
   });
+
+  if (loadedState.search) {
+    searchInput.value = loadedState.search;
+  }
+
+  if (loadedState.tags.size > 0) {
+    tagChips.forEach((chip) => {
+      chip.classList.toggle('active', loadedState.tags.has(chip.dataset.tag));
+      chip.classList.toggle('selected', loadedState.tags.has(chip.dataset.tag));
+    });
+  }
 
   const grid = container.querySelector('.recipe-list');
   const emptyState = container.querySelector('.empty-state');
@@ -86,6 +131,11 @@ export async function renderBrowseView(params, container) {
           card.dataset.id = recipe.id;
           renderRecipeCard(recipe, card);
           card.addEventListener('click', () => {
+            saveBrowseState(
+              searchQuery.value,
+              selectedTags.value,
+              window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0,
+            );
             navigate(`/recipe/${recipe.id}`);
           });
           grid.appendChild(card);
@@ -94,8 +144,39 @@ export async function renderBrowseView(params, container) {
     }),
   );
 
+  if (loadedState.scrollY > 0) {
+    setTimeout(() => {
+      window.scrollTo(0, loadedState.scrollY);
+    }, 0);
+  }
+
+  let saveTimer = null;
+
+  function debouncedSaveState() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveBrowseState(
+        searchQuery.value,
+        selectedTags.value,
+        window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0,
+      );
+    }, 100);
+  }
+
+  const saveEffect = effect(() => {
+    void searchQuery.value;
+    void selectedTags.value;
+    debouncedSaveState();
+  });
+
+  unsubs.push(saveEffect);
+
+  window.addEventListener('scroll', debouncedSaveState);
+
   return () => {
     if (debounceTimer) clearTimeout(debounceTimer);
+    if (saveTimer) clearTimeout(saveTimer);
+    window.removeEventListener('scroll', debouncedSaveState);
     unsubs.forEach((fn) => {
       if (typeof fn === 'function') fn();
     });

@@ -137,6 +137,15 @@ export async function renderDetailView(params, container) {
   const backBtn = container.querySelector('.back-btn');
   backBtn.addEventListener('click', () => {
     sessionStorage.removeItem(`servings_${recipe.id}`);
+    const stored = sessionStorage.getItem('browse_view_state');
+    if (stored) {
+      const state = JSON.parse(stored);
+      if (state.scrollY > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, state.scrollY);
+        }, 0);
+      }
+    }
     navigate('/');
   });
 

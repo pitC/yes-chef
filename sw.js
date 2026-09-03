@@ -1,5 +1,7 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v18';
+// Cache version in major.minor.patch format
+const CACHE_VERSION = '1.1.0';
+const CACHE_NAME = `yes-chef-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   './',
   'index.html',
