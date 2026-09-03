@@ -1,6 +1,6 @@
 {
   "name": "yes-chef",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A static, installable PWA for capturing recipes, browsing/tagging them, and running a hands-free cooking mode with parallel timers.",
   "private": true,
   "scripts": {
