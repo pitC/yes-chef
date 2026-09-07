@@ -105,17 +105,9 @@ async function runHttp(): Promise<void> {
       next();
       return;
     }
-    const expected = getAuthToken();
-    // If no expected token configured, fail closed (MCP_TOKEN must be set in production)
-    if (!expected) {
-      res.status(500).json({ error: "Server misconfigured: MCP_TOKEN not set" });
-      return;
-    }
     const provided = extractBearerToken(req);
-    const isValid = !!provided && (provided === expected || isValidOAuthToken(provided));
-    if (!isValid) {
+    if (!provided) {
       const issuer = getIssuer(req);
-      // RFC 9728: include resource_metadata so Claude discovers OAuth metadata on 401
       res.setHeader(
         "WWW-Authenticate",
         `Bearer realm="yes-chef-mcp", resource_metadata="${issuer}/.well-known/oauth-protected-resource", error="invalid_token"`
@@ -123,6 +115,39 @@ async function runHttp(): Promise<void> {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
+    const expected = getAuthToken();
+    // If MCP_TOKEN is set, check against it or OAuth token; otherwise accept any non-empty token
+    // that is a valid collection code (no slashes, non-empty) — the API handler will validate existence
+    const isValid = expected
+      ? provided === expected || isValidOAuthToken(provided)
+      : provided.trim().length > 0 && !provided.includes("/");
+    if (!isValid) {
+      const issuer = getIssuer(req);
+      res.setHeader(
+        "WWW-Authenticate",
+        `Bearer realm="yes-chef-mcp", resource_metadata="${issuer}/.well-known/oauth-protected-resource", error="invalid_token"`
+      );
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    next();
+  }
+
+  function requireApiAuth(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    if (req.method === "OPTIONS") {
+      next();
+      return;
+    }
+    if (process.env.MCP_NO_AUTH === "1" || process.env.MCP_NO_AUTH === "true" || process.env.MCP_AUTH_DISABLED === "1" || process.env.MCP_AUTH_DISABLED === "true") {
+      next();
+      return;
+    }
+    const provided = extractBearerToken(req);
+    if (!provided || provided.includes("/") || !provided.trim()) {
+      res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
+    }
+    // Accept any code that is a valid collection name; handlers will check existence via metadata
     next();
   }
 
@@ -136,9 +161,9 @@ async function runHttp(): Promise<void> {
 
   // App server API — all Firestore access goes through here (no direct client SDK)
   // All calls require cookbook code (Bearer token) — never disclose collection list
-  app.get("/api/recipes", requireMcpAuth, handleListRecipes);
-  app.get("/api/recipes/:id", requireMcpAuth, handleGetRecipe);
-  app.get("/api/metadata", requireMcpAuth, handleGetMetadata);
+  app.get("/api/recipes", requireApiAuth, handleListRecipes);
+  app.get("/api/recipes/:id", requireApiAuth, handleGetRecipe);
+  app.get("/api/metadata", requireApiAuth, handleGetMetadata);
 
   // ── OAuth discovery (RFC 8414 + RFC 9728) — unauthenticated, required for Claude "Always required" ──
   // Claude probes these before starting OAuth flow. Must be CORS-open and not behind auth.

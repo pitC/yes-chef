@@ -5,6 +5,7 @@ import { APP_SERVER_URL } from './app-config.js';
 import {
   loadStoredCollectionKey,
   saveStoredCollectionKey,
+  removeStoredCollectionKey,
   markFirestoreSkipped,
   isFirestoreSkipped,
 } from './storage.js';
@@ -53,6 +54,7 @@ export function showRepositorySetup(statusEl) {
       <div class="setup-box">
         <p>Enter your secret cookbook code to sync recipes, or continue locally with the bundled recipe.</p>
         <input class="setup-input" id="collection-input" type="password" placeholder="Enter the secret cookbook code" autocomplete="off" spellcheck="false">
+        <div id="collection-error" class="setup-error" style="display:none; color: #b91c1c; margin: 8px 0; font-size: 0.9em;"></div>
         <div class="setup-hint">
           Ask the cookbook owner for the code. Each recipe is stored in that collection.
           Keep the code private — anyone with it can read your recipes.
@@ -65,9 +67,49 @@ export function showRepositorySetup(statusEl) {
     `;
 
     const input = document.getElementById('collection-input');
+    const errorEl = document.getElementById('collection-error');
+    const saveBtn = document.getElementById('collection-save');
     input.focus();
 
-    document.getElementById('collection-save').addEventListener('click', () => {
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+
+    async function validateAndSave(collectionKey) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Verifying…';
+      errorEl.style.display = 'none';
+      try {
+        const base = getBaseUrl();
+        const resp = await fetch(`${base}/api/recipes`, {
+          headers: { Authorization: `Bearer ${collectionKey}` },
+        });
+        if (resp.status === 401) {
+          showError('Invalid code — please check and try again.');
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save & sync';
+          input.focus();
+          input.select();
+          return;
+        }
+        if (!resp.ok) {
+          showError(`Verification failed (HTTP ${resp.status}) — try again.`);
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save & sync';
+          return;
+        }
+        // Valid — persist and resolve
+        saveStoredCollectionKey(collectionKey);
+        resolve(collectionKey);
+      } catch {
+        showError('Network error — please try again.');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save & sync';
+      }
+    }
+
+    saveBtn.addEventListener('click', () => {
       const collectionKey = normalizeCollectionKey(input.value);
       if (!collectionKey) {
         input.setCustomValidity('Enter a cookbook code without slashes.');
@@ -76,8 +118,7 @@ export function showRepositorySetup(statusEl) {
         return;
       }
       input.setCustomValidity('');
-      saveStoredCollectionKey(collectionKey);
-      resolve(collectionKey);
+      validateAndSave(collectionKey);
     });
 
     document.getElementById('repository-skip').addEventListener('click', () => {
@@ -87,7 +128,8 @@ export function showRepositorySetup(statusEl) {
 
     input.addEventListener('keydown', (e) => {
       input.setCustomValidity('');
-      if (e.key === 'Enter') document.getElementById('collection-save').click();
+      errorEl.style.display = 'none';
+      if (e.key === 'Enter') saveBtn.click();
     });
   });
 }
@@ -109,6 +151,10 @@ export async function fetchAllRecipes({ onStatus } = {}) {
     if (onStatus) onStatus('Local only');
     return [];
   }
+  if (isFirestoreSkipped()) {
+    if (onStatus) onStatus('Local only');
+    return [];
+  }
   const base = getBaseUrl();
   if (onStatus) onStatus('Syncing…');
   try {
@@ -116,13 +162,36 @@ export async function fetchAllRecipes({ onStatus } = {}) {
     const auth = getAuthHeader();
     if (auth) headers.Authorization = auth;
     const resp = await fetch(`${base}/api/recipes`, { headers });
+    if (resp.status === 401) {
+      const badKey = loadStoredCollectionKey();
+      if (badKey) removeStoredCollectionKey(badKey);
+      if (onStatus) onStatus('Invalid code — please re-enter');
+      // Try to re-prompt if statusEl is available in DOM
+      const statusEl = document.getElementById('firestore-status');
+      if (statusEl) {
+        // Clear any existing prompt and show again
+        statusEl.innerHTML = '';
+        statusEl.style.display = 'none';
+        if (typeof window !== 'undefined' && window.location) {
+          // Show setup again on next tick
+          setTimeout(() => {
+            ensureSyncConfig(statusEl).then(() => {
+              statusEl.style.display = 'none';
+              statusEl.innerHTML = '';
+              window.location.reload();
+            });
+          }, 300);
+        }
+      }
+      throw new Error(`HTTP ${resp.status}`);
+    }
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const recipes = await resp.json();
     if (onStatus) onStatus('Synced');
     return Array.isArray(recipes) ? recipes : [];
   } catch (e) {
     console.error('[Yes Chef] Repository fetch error', e);
-    if (onStatus) onStatus('Local only (sync failed)');
+    if (onStatus && !String(e.message).includes('401')) onStatus('Local only (sync failed)');
     return [];
   }
 }
