@@ -1,11 +1,37 @@
 import type { Request, Response } from "express";
-import { getDb, getCollection, getFirestoreConfig, collection, doc, getDoc, getDocs } from "./firestore.js";
+import { getDb, collection, doc, getDoc, getDocs } from "./firestore.js";
 
 const METADATA_ID = "metadata";
 
-export async function handleListRecipes(_req: Request, res: Response): Promise<void> {
+function getCollectionNameFromRequest(req: Request): string | null {
+  const auth = (req.headers.authorization || (req.headers.Authorization as string | undefined)) as string | undefined;
+  let token: string | undefined;
+  if (auth) {
+    const m = auth.match(/^Bearer\s+(.+)$/i);
+    if (m) token = m[1].trim();
+    else if (!auth.includes(" ") && auth.trim()) token = auth.trim();
+  }
+  if (!token) {
+    const q = (req.query.token || req.query.key || req.query.auth) as string | undefined;
+    if (q && q.trim()) token = q.trim();
+  }
+  if (!token) {
+    const h = (req.headers["x-api-key"] || req.headers["x-collection-key"]) as string | undefined;
+    if (h && typeof h === "string" && h.trim()) token = h.trim();
+  }
+  if (!token) return null;
+  const cleaned = token.trim().replace(/^\/+/, "");
+  return cleaned && !cleaned.includes("/") ? cleaned : null;
+}
+
+export async function handleListRecipes(req: Request, res: Response): Promise<void> {
   try {
-    const col = await getCollection();
+    const collectionName = getCollectionNameFromRequest(req);
+    if (!collectionName) {
+      res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
+    }
+    const col = collection(getDb(), collectionName);
     const snap = await getDocs(col);
     const recipes: unknown[] = [];
     snap.forEach((d) => {
@@ -28,7 +54,12 @@ export async function handleGetRecipe(req: Request, res: Response): Promise<void
       res.status(400).json({ error: "Missing recipe id" });
       return;
     }
-    const col = await getCollection();
+    const collectionName = getCollectionNameFromRequest(req);
+    if (!collectionName) {
+      res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
+    }
+    const col = collection(getDb(), collectionName);
     const snap = await getDoc(doc(col, id));
     if (!snap.exists()) {
       res.status(404).json({ error: `Recipe ${id} not found` });
@@ -43,35 +74,14 @@ export async function handleGetRecipe(req: Request, res: Response): Promise<void
   }
 }
 
-export async function handleListCollections(_req: Request, res: Response): Promise<void> {
+export async function handleGetMetadata(req: Request, res: Response): Promise<void> {
   try {
-    // Use REST listCollectionIds for client SDK (no hardcoding)
-    const config = getFirestoreConfig();
-    const projectId = config.projectId;
-    const apiKey = config.apiKey;
-    if (projectId && apiKey) {
-      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:listCollectionIds?key=${apiKey}`;
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pageSize: 20 }),
-      });
-      if (resp.ok) {
-        const json = (await resp.json()) as { collectionIds?: string[] };
-        res.json({ collections: json.collectionIds || [] });
-        return;
-      }
+    const collectionName = getCollectionNameFromRequest(req);
+    if (!collectionName) {
+      res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
     }
-    res.json({ collections: [] });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    res.status(500).json({ error: `Failed to list collections: ${msg}` });
-  }
-}
-
-export async function handleGetMetadata(_req: Request, res: Response): Promise<void> {
-  try {
-    const col = await getCollection();
+    const col = collection(getDb(), collectionName);
     const snap = await getDoc(doc(col, METADATA_ID));
     if (!snap.exists()) {
       res.json(null);

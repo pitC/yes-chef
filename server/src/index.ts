@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp.js";
 import { getAuthToken } from "./firestore.js";
-import { handleListRecipes, handleGetRecipe, handleListCollections, handleGetMetadata } from "./api.js";
+import { handleListRecipes, handleGetRecipe, handleGetMetadata } from "./api.js";
 import {
   getIssuer,
   handleAuthorizationServerMetadata,
@@ -135,11 +135,10 @@ async function runHttp(): Promise<void> {
   });
 
   // App server API — all Firestore access goes through here (no direct client SDK)
-  // Public reads; writes via MCP tools (Admin SDK bypasses rules)
-  app.get("/api/recipes", handleListRecipes);
-  app.get("/api/recipes/:id", handleGetRecipe);
-  app.get("/api/collections", handleListCollections);
-  app.get("/api/metadata", handleGetMetadata);
+  // All calls require cookbook code (Bearer token) — never disclose collection list
+  app.get("/api/recipes", requireMcpAuth, handleListRecipes);
+  app.get("/api/recipes/:id", requireMcpAuth, handleGetRecipe);
+  app.get("/api/metadata", requireMcpAuth, handleGetMetadata);
 
   // ── OAuth discovery (RFC 8414 + RFC 9728) — unauthenticated, required for Claude "Always required" ──
   // Claude probes these before starting OAuth flow. Must be CORS-open and not behind auth.

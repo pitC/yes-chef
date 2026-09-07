@@ -76,7 +76,7 @@ async function discoverCollection(): Promise<string | null> {
 
   discoveryPromise = (async () => {
     const db = getDb();
-    // 1) Try config/collections doc — established collection is stored in Firestore itself
+    // Only source of truth is config/collections doc — no listCollectionIds (never disclose all IDs)
     try {
       const snap = await getDoc(doc(db, "config", "collections"));
       if (snap.exists()) {
@@ -88,34 +88,6 @@ async function discoverCollection(): Promise<string | null> {
         if (name && typeof name === "string" && name.trim() && !name.includes("/")) {
           cachedCollection = name.trim();
           return cachedCollection;
-        }
-      }
-    } catch {}
-
-    // 2) Fallback: Firestore REST listCollectionIds — truly dynamic, no hardcoding
-    try {
-      const config = getFirebaseConfig();
-      const projectId = config.projectId;
-      const apiKey = config.apiKey;
-      if (projectId && apiKey) {
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:listCollectionIds?key=${apiKey}`;
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pageSize: 20 }),
-        });
-        if (resp.ok) {
-          const json = (await resp.json()) as { collectionIds?: string[] };
-          const ids = json.collectionIds || [];
-          const candidate = ids.find((id) => id !== "config" && typeof id === "string" && id.trim());
-          if (candidate) {
-            cachedCollection = candidate;
-            return cachedCollection;
-          }
-          if (ids.length > 0) {
-            cachedCollection = ids[0];
-            return cachedCollection;
-          }
         }
       }
     } catch {}
