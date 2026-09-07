@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderEmptyState, renderErrorState } from '../js/views/empty-states.js';
+import { renderEmptyState, renderErrorState } from '../public/js/views/empty-states.js';
 
 describe('empty states', () => {
   let container;

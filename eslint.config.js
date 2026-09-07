@@ -24,7 +24,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['js/**/*.js'],
+    files: ['public/js/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

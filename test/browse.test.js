@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderBrowseView } from '../js/views/browse.js';
-import { renderRecipeCard } from '../js/components/recipe-card.js';
+import { renderBrowseView } from '../public/js/views/browse.js';
+import { renderRecipeCard } from '../public/js/components/recipe-card.js';
 
-vi.mock('../js/router.js', () => ({
+vi.mock('../public/js/router.js', () => ({
   navigate: vi.fn(),
   router: {
     currentRoute: { value: { path: '/', params: {} } },
@@ -89,7 +89,7 @@ describe('browse view', () => {
   });
 
   it('clicking card navigates to /recipe/:id', async () => {
-    const { navigate } = await import('../js/router.js');
+    const { navigate } = await import('../public/js/router.js');
     
     await renderBrowseView({}, container);
     

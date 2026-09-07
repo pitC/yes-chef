@@ -4,7 +4,7 @@
   "description": "A static, installable PWA for capturing recipes, browsing/tagging them, and running a hands-free cooking mode with parallel timers.",
   "private": true,
   "scripts": {
-    "lint": "eslint js test",
+    "lint": "eslint public/js test",
     "test": "vitest run",
     "prepare": "husky"
   },

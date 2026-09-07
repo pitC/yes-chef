@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { signal, computed, effect, batch } from '../js/signals.js';
+import { signal, computed, effect, batch } from '../public/js/signals.js';
 
 describe('signal', () => {
   it('holds value and notifies subscribers on change', () => {

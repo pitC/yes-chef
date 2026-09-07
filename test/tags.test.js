@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractAllTags, filterByTags, filterByKeyword } from '../js/utils/tags.js';
+import { extractAllTags, filterByTags, filterByKeyword } from '../public/js/utils/tags.js';
 
 describe('tag utilities', () => {
   const recipes = [

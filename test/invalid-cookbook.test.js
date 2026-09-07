@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { saveStoredCollectionKey, removeStoredCollectionKey, loadStoredCollectionKey } from '../js/storage.js';
+import { saveStoredCollectionKey, removeStoredCollectionKey, loadStoredCollectionKey } from '../public/js/storage.js';
 
 function createMockStorage() {
   const store = Object.create(null);
@@ -72,7 +72,7 @@ describe('invalid cookbook code — should not fallback to default recipe', () =
     const origFetch = globalThis.fetch;
     globalThis.fetch = fetchMock;
 
-    const { fetchAllRecipes } = await import('../js/repository.js?invalid1');
+    const { fetchAllRecipes } = await import('../public/js/repository.js?invalid1');
 
     await expect(fetchAllRecipes({})).rejects.toThrow(/Invalid cookbook code/);
     expect(mockLocal.getItem('yesChefFirestoreCollection')).toBeNull();
@@ -97,7 +97,7 @@ describe('invalid cookbook code — should not fallback to default recipe', () =
     const origFetch = globalThis.fetch;
     globalThis.fetch = fetchMock;
 
-    const { fetchRecipe } = await import('../js/repository.js?invalid2');
+    const { fetchRecipe } = await import('../public/js/repository.js?invalid2');
 
     await expect(fetchRecipe({ recipeId: 'menemen' })).rejects.toThrow(/Invalid cookbook code/);
     expect(mockLocal.getItem('yesChefFirestoreCollection')).toBeNull();
@@ -116,7 +116,7 @@ describe('invalid cookbook code — should not fallback to default recipe', () =
     );
     const origFetch = globalThis.fetch;
     globalThis.fetch = fetchMock;
-    const { getRecipes, _clearCache } = await import('../js/data/recipes.js?invalidRecipes');
+    const { getRecipes, _clearCache } = await import('../public/js/data/recipes.js?invalidRecipes');
     _clearCache();
 
     await expect(getRecipes()).rejects.toThrow(/Invalid cookbook code/);
@@ -128,10 +128,10 @@ describe('invalid cookbook code — should not fallback to default recipe', () =
 
   it('browse view: renders Invalid-code error-state instead of default recipe cards', async () => {
     installMockStorage();
-    const dataMod = await import('../js/data/recipes.js');
+    const dataMod = await import('../public/js/data/recipes.js');
     vi.spyOn(dataMod, 'getRecipes').mockRejectedValue(new Error('Invalid cookbook code — please re-enter'));
 
-    const { renderBrowseView } = await import('../js/views/browse.js');
+    const { renderBrowseView } = await import('../public/js/views/browse.js');
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -149,10 +149,10 @@ describe('invalid cookbook code — should not fallback to default recipe', () =
   it('detail view: propagates Invalid instead of showing Recipe not found or menemen', async () => {
     vi.resetModules();
     installMockStorage();
-    const dataMod = await import('../js/data/recipes.js');
+    const dataMod = await import('../public/js/data/recipes.js');
     vi.spyOn(dataMod, 'getRecipe').mockRejectedValue(new Error('Invalid cookbook code — please re-enter'));
 
-    const { renderDetailView } = await import('../js/views/detail.js?invalid4');
+    const { renderDetailView } = await import('../public/js/views/detail.js?invalid4');
     const container = document.createElement('div');
     document.body.appendChild(container);
 

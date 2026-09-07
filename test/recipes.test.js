@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRecipes, getRecipe } from '../js/data/recipes.js';
+import { getRecipes, getRecipe } from '../public/js/data/recipes.js';
 
 describe('recipes data service', () => {
   it('getRecipes returns array with menemen recipe', async () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderTimerTray } from '../js/components/timer-tray.js';
-import { timerManager } from '../js/timers/manager.js';
+import { renderTimerTray } from '../public/js/components/timer-tray.js';
+import { timerManager } from '../public/js/timers/manager.js';
 
 describe('timer tray component', () => {
   let container;

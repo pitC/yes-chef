@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderDetailView } from '../js/views/detail.js';
+import { renderDetailView } from '../public/js/views/detail.js';
 
-vi.mock('../js/router.js', () => ({
+vi.mock('../public/js/router.js', () => ({
   navigate: vi.fn(),
   router: {
     currentRoute: { value: { path: '/', params: {} } },
@@ -67,7 +67,7 @@ describe('detail view', () => {
   });
 
   it('Start Cooking navigates to /cook/:id', async () => {
-    const { navigate } = await import('../js/router.js');
+    const { navigate } = await import('../public/js/router.js');
     
     await renderDetailView({ id: 'menemen' }, container);
     
@@ -78,7 +78,7 @@ describe('detail view', () => {
   });
 
   it('Back button returns to browse', async () => {
-    const { navigate } = await import('../js/router.js');
+    const { navigate } = await import('../public/js/router.js');
     
     await renderDetailView({ id: 'menemen' }, container);
     

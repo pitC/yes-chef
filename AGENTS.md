@@ -5,8 +5,8 @@
 | Command | What it does |
 |---|---|
 | `npm test` | Run Vitest test suite (jsdom) |
-| `npm run lint` | Run ESLint on `js/` and `test/` |
-| `python3 -m http.server [8000]` | Serve the app locally (no build needed); required for CORS (Firestore) |
+| `npm run lint` | Run ESLint on `public/js/` and `test/` |
+| `python3 -m http.server [8000]` | Serve from `public/` (no build needed); required for CORS (Firestore) |
 
 ## Key conventions & quirks
 
@@ -26,14 +26,11 @@
 
 ## Directory ownership
 
-- `js/` — all app source (bootstrap, state, event wiring, API helpers, rendering, storage, timers, PWA)
+- `public/` — static PWA (HTML, CSS, JS, icons, manifest, service worker)
 - `test/` — Vitest unit tests
-- `css/` — base.css + views.css
-- `index.html` — app shell and markup
-- `firebase.js` — Firebase SDK initialization and config
-- `manifest.json` — PWA manifest
-- `sw.js` — Service worker
-- `parser/` — Desktop parsing agent output (JSON recipes matching schema)
+- `schema.json` — recipe JSON schema (shared with the MCP server)
+- `server/` — Cloud Run MCP + API
+- `terraform/` — GCP infrastructure
 
 ## Common gotchas
 

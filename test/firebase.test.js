@@ -19,7 +19,7 @@ describe('firebase modular init (TDD)', () => {
   });
 
   it('exports app initialized via initializeApp with firebaseConfig', async () => {
-    const { app } = await import('../js/firebase.js');
+    const { app } = await import('../public/js/firebase.js');
     const { initializeApp } = await import('firebase/app');
     expect(initializeApp).toHaveBeenCalledTimes(1);
     const cfg = initializeApp.mock.calls[0][0];
@@ -36,7 +36,7 @@ describe('firebase modular init (TDD)', () => {
   });
 
   it('exports db via getFirestore(app) and getFirestoreApi shape', async () => {
-    const { db, getFirestoreApi } = await import('../js/firebase.js');
+    const { db, getFirestoreApi } = await import('../public/js/firebase.js');
     const { getFirestore } = await import('firebase/firestore');
     expect(getFirestore).toHaveBeenCalled();
     expect(db).toBeDefined();
@@ -52,7 +52,7 @@ describe('firebase modular init (TDD)', () => {
 
   it('does not contain hard-coded apiKey literal in js/firebase.js source', async () => {
     const fs = await import('node:fs');
-    const src = fs.readFileSync('js/firebase.js', 'utf8');
+    const src = fs.readFileSync('public/js/firebase.js', 'utf8');
     // js/firebase.js should import from firebase-config, not embed AIza...
     expect(src).not.toMatch(/AIzaSyD_jSlv9np8EJvgVebvHLxGO-St68ZOwGY/);
     expect(src).toMatch(/from ['"]\.\/firebase-config\.js['"]/);
@@ -64,7 +64,7 @@ describe('firebase modular init (TDD)', () => {
     const gitignore = fs.readFileSync('.gitignore', 'utf8');
     expect(gitignore).toMatch(/firebase-config\.js/);
     // example config exists
-    const exampleExists = fs.existsSync('js/firebase-config.example.js');
+    const exampleExists = fs.existsSync('public/js/firebase-config.example.js');
     expect(exampleExists).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scaleAmount, formatAmount, scaleIngredients } from '../js/utils/scaling.js';
+import { scaleAmount, formatAmount, scaleIngredients } from '../public/js/utils/scaling.js';
 
 describe('scaling utilities', () => {
   describe('scaleAmount', () => {

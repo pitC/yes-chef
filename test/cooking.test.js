@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderCookingView } from '../js/views/cooking.js';
-import { renderCookingStep } from '../js/components/cooking-step.js';
+import { renderCookingView } from '../public/js/views/cooking.js';
+import { renderCookingStep } from '../public/js/components/cooking-step.js';
 
-vi.mock('../js/router.js', () => ({
+vi.mock('../public/js/router.js', () => ({
   navigate: vi.fn(),
   router: {
     currentRoute: { value: { path: '/', params: {} } },
@@ -57,7 +57,7 @@ describe('cooking view', () => {
     checkbox.click();
     
     // Check signal updated
-    const { doneSteps } = await import('../js/views/cooking.js');
+    const { doneSteps } = await import('../public/js/views/cooking.js');
     expect(doneSteps.value.has('step_1')).toBe(true);
     expect(sessionStorage.getItem('doneSteps')).toContain('step_1');
   });
@@ -77,7 +77,7 @@ describe('cooking view', () => {
     await renderCookingView({ id: 'menemen' }, container);
     
     // Test that activeStepId signal can be updated
-    const { activeStepId } = await import('../js/views/cooking.js');
+    const { activeStepId } = await import('../public/js/views/cooking.js');
     activeStepId.value = 'step_1';
     expect(activeStepId.value).toBe('step_1');
   });
@@ -93,7 +93,7 @@ describe('cooking view', () => {
   });
 
   it('exit button returns to detail view, clears sessionStorage', async () => {
-    const { navigate } = await import('../js/router.js');
+    const { navigate } = await import('../public/js/router.js');
     
     await renderCookingView({ id: 'menemen' }, container);
     

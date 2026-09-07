@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderServingsStepper } from '../js/components/servings-stepper.js';
+import { renderServingsStepper } from '../public/js/components/servings-stepper.js';
 
 describe('servings stepper component', () => {
   let container;

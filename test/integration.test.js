@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderBrowseView } from '../js/views/browse.js';
-import { renderDetailView } from '../js/views/detail.js';
-import { renderCookingView } from '../js/views/cooking.js';
-import { navigate } from '../js/router.js';
-import { timerManager } from '../js/timers/manager.js';
+import { renderBrowseView } from '../public/js/views/browse.js';
+import { renderDetailView } from '../public/js/views/detail.js';
+import { renderCookingView } from '../public/js/views/cooking.js';
+import { navigate } from '../public/js/router.js';
+import { timerManager } from '../public/js/timers/manager.js';
 
-vi.mock('../js/router.js', () => ({
+vi.mock('../public/js/router.js', () => ({
   navigate: vi.fn(),
   router: {
     currentRoute: { value: { path: '/', params: {} } },
@@ -88,7 +88,7 @@ describe('integration: Browse → Detail → Cooking → Timer flow', () => {
     checkbox.click();
     
     // Verify signal updated
-    const { doneSteps } = await import('../js/views/cooking.js');
+    const { doneSteps } = await import('../public/js/views/cooking.js');
     expect(doneSteps.value.has('step_1')).toBe(true);
   });
 

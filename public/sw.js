@@ -1,5 +1,5 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v21';
+const CACHE_NAME = 'yes-chef-v22';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -31,7 +31,6 @@ const STATIC_ASSETS = [
   'js/app-config.js',
   'js/firebase-config.js',
   'js/storage.js',
-  'firebase.js',
   'icons/icon-192.svg',
   'icons/icon-512.svg',
 ];

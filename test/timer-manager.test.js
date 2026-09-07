@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { timerManager } from '../js/timers/manager.js';
+import { timerManager } from '../public/js/timers/manager.js';
 
 describe('TimerManager', () => {
   beforeEach(() => {

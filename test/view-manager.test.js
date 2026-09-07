@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { viewManager } from '../js/views/view-manager.js';
+import { viewManager } from '../public/js/views/view-manager.js';
 
 describe('view manager', () => {
   let container;

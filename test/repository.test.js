@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 describe('repository.js — generic, no Firestore direct, no hardcoding', () => {
-  const repoSrc = readFileSync('js/repository.js', 'utf8');
-  const firestoreShim = readFileSync('js/firestore.js', 'utf8');
+  const repoSrc = readFileSync('public/js/repository.js', 'utf8');
+  const firestoreShim = readFileSync('public/js/firestore.js', 'utf8');
 
   it('repository does not hardcode collection key and does not import firestore SDK', () => {
     expect(repoSrc).not.toMatch(/deafening-gnarly-dining/);
@@ -33,15 +33,15 @@ describe('repository.js — generic, no Firestore direct, no hardcoding', () => 
     expect(repoSrc).not.toMatch(/getFirestore/);
   });
 
-  it('js/firestore.js is a shim re-exporting from repository (no direct Firestore)', () => {
+  it('public/js/firestore.js is a shim re-exporting from repository (no direct Firestore)', () => {
     expect(firestoreShim).toMatch(/from ['"]\.\/repository\.js['"]/);
     expect(firestoreShim).not.toMatch(/getFirestoreApi/);
     expect(firestoreShim).not.toMatch(/deafening-gnarly-dining/);
   });
 
-  it('js/data/recipes.js and js/bootstrap.js use repository, not firestore', () => {
-    const recipesSrc = readFileSync('js/data/recipes.js', 'utf8');
-    const bootstrapSrc = readFileSync('js/bootstrap.js', 'utf8');
+  it('public/js/data/recipes.js and js/bootstrap.js use repository, not firestore', () => {
+    const recipesSrc = readFileSync('public/js/data/recipes.js', 'utf8');
+    const bootstrapSrc = readFileSync('public/js/bootstrap.js', 'utf8');
     expect(recipesSrc).toMatch(/from ['"]\.\.\/repository\.js['"]/);
     expect(recipesSrc).not.toMatch(/from ['"]\.\.\/firestore\.js['"]/);
     expect(bootstrapSrc).toMatch(/from ['"]\.\/repository\.js['"]/);
@@ -51,7 +51,7 @@ describe('repository.js — generic, no Firestore direct, no hardcoding', () => 
   it('app-config is generic and gitignored', () => {
     const gitignore = readFileSync('.gitignore', 'utf8');
     expect(gitignore).toMatch(/app-config\.js/);
-    const appConfigExample = readFileSync('js/app-config.example.js', 'utf8');
+    const appConfigExample = readFileSync('public/js/app-config.example.js', 'utf8');
     expect(appConfigExample).toMatch(/APP_SERVER_URL/);
     expect(appConfigExample).not.toMatch(/deafening-gnarly-dining/);
   });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { scheduleNotification } from '../js/timers/sw-messaging.js';
+import { scheduleNotification } from '../public/js/timers/sw-messaging.js';
 
 describe('SW messaging', () => {
   let mockSW;

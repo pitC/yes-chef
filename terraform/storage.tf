@@ -30,6 +30,6 @@ resource "google_storage_bucket_iam_member" "public_read" {
   member = "allUsers"
 }
 
-# Note: objects are deployed via `gcloud storage rsync` (including generated js/firebase-config.js),
+# Note: objects are deployed via `gcloud storage rsync` from `public/` (including generated public/js/firebase-config.js),
 # not via google_storage_bucket_object — for large syncs rsync is simpler.
-# `js/firebase-config.js` is generated from Secret Manager `firebase-config` at deploy time (see secrets.tf).
+# `public/js/firebase-config.js` is generated from Secret Manager `firebase-config` at deploy time (see secrets.tf).

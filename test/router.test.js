@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { router, navigate } from '../js/router.js';
+import { router, navigate } from '../public/js/router.js';
 
 describe('router', () => {
   beforeEach(() => {

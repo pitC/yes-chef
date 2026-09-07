@@ -1,7 +1,7 @@
-// Copy to js/firebase-config.js and fill from Secret Manager `firebase-config`
+// Copy to public/js/firebase-config.js and fill from Secret Manager `firebase-config`
 // This file is generated at deploy time — never commit real key.
 // See GCP_MIGRATION_PLAN §6.1 / §8 for generation via:
-// gcloud secrets versions access latest --secret=firebase-config --project=yes-chef-cookbook --format="value(payload.data)" | base64 -d > js/firebase-config.js
+// gcloud secrets versions access latest --secret=firebase-config --project=yes-chef-cookbook --format="value(payload.data)" | base64 -d > public/js/firebase-config.js
 
 export const firebaseConfig = {
   apiKey: "YOUR_API_KEY_HERE",
