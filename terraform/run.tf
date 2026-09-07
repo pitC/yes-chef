@@ -40,6 +40,8 @@ resource "google_cloud_run_v2_service" "yes_chef" {
           cpu    = "1000m"
           memory = "256Mi"
         }
+        cpu_idle          = true
+        startup_cpu_boost = true
       }
 
       env {
@@ -60,11 +62,6 @@ resource "google_cloud_run_v2_service" "yes_chef" {
       env {
         name  = "SERVICE"
         value = var.run_service_name
-      }
-
-      env {
-        name  = "PORT"
-        value = "8080"
       }
 
       # MCP auth token via env or secret — prefer secret reference if mcp_token provided
@@ -97,11 +94,6 @@ resource "google_cloud_run_v2_service" "yes_chef" {
     # Toggle by changing service_account below:
     # service_account = google_service_account.run.email
     service_account = google_service_account.run.email
-  }
-
-  traffic {
-    percent         = 100
-    latest_revision = true
   }
 
   # Allow unauthenticated — health checks and MCP auth is app-level (requireMcpAuth via MCP_TOKEN)

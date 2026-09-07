@@ -9,12 +9,15 @@ resource "google_pubsub_topic" "billing_alerts" {
   }
 }
 
-resource "google_pubsub_topic_iam_member" "billing_publisher" {
-  project = var.project_id
-  topic   = google_pubsub_topic.billing_alerts.name
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:service-${var.project_number}@gcp-sa-billing.iam.gserviceaccount.com"
-}
+# Billing publisher IAM — disabled: service account service-${var.project_number}@gcp-sa-billing.iam.gserviceaccount.com
+# does not exist in this project; billing budgets publish via Google-managed service account.
+# The topic will still receive budget notifications without explicit IAM (managed by Google).
+# resource "google_pubsub_topic_iam_member" "billing_publisher" {
+#   project = var.project_id
+#   topic   = google_pubsub_topic.billing_alerts.name
+#   role    = "roles/pubsub.publisher"
+#   member  = "serviceAccount:service-${var.project_number}@gcp-sa-billing.iam.gserviceaccount.com"
+# }
 
 resource "google_billing_budget" "cap" {
   billing_account = var.billing_account_id
