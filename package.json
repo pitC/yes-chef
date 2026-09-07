@@ -17,5 +17,8 @@
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "firebase": "^12.17.1"
   }
 }

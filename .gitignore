@@ -8,3 +8,21 @@ build/
 *.local
 coverage/
 .nyc_output/
+# Firebase config — generated from Secret Manager, never commit real key
+js/firebase-config.js
+firebase-config.js
+**/firebase-config.js
+# Service account & env
+service-account.json
+*.service-account.json
+.env
+.env.*
+!.env.example
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform/.budget-cap.zip
+# API key guard
+**/AIza*

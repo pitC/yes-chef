@@ -36,6 +36,16 @@ global.Notification = class Notification {
   static requestPermission = () => Promise.resolve('granted');
 };
 
+// Ensure js/firebase-config.js exists for tests (generated from Secret Manager in prod)
+import { existsSync, copyFileSync } from 'node:fs';
+if (!existsSync('js/firebase-config.js') && existsSync('js/firebase-config.example.js')) {
+  try {
+    copyFileSync('js/firebase-config.example.js', 'js/firebase-config.js');
+  } catch {
+    // ignore copy failure in test env
+  }
+}
+
 // Mock fetch for recipes - intercept /test/menemen.json
 import menemenData from './menemen.json';
 
