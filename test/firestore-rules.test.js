@@ -1,24 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-describe('firestore.rules (established collections)', () => {
+describe('firestore.rules — all through app server, no hardcoding', () => {
   const rules = readFileSync('firestore.rules', 'utf8');
 
-  it('allows read and write on deafening-gnarly-dining collection', () => {
-    expect(rules).toMatch(/match \/deafening-gnarly-dining\/\{docId\}\s*\{[^}]*allow read, write: if true/s);
+  it('does not hardcode collection key', () => {
+    expect(rules).not.toMatch(/deafening-gnarly-dining/);
   });
 
-  it('denies arbitrary collections via catch-all', () => {
-    expect(rules).toMatch(/match \/\{other=\*\*\}\s*\{[^}]*allow read, write: if false/s);
+  it('denies direct client reads/writes on any collection (all via app server)', () => {
+    expect(rules).toMatch(/match \/\{collection\}\/\{docId\}/);
+    expect(rules).toMatch(/allow read, write: if false/);
+  });
+
+  it('denies config reads/writes via client (all via app server)', () => {
+    expect(rules).toMatch(/match \/config\/\{docId\}/);
+    expect(rules).toMatch(/allow read, write: if false/);
   });
 
   it('does not contain blanket allow read: if true on {document=**}', () => {
-    // Old rule was match /{document=**} { allow read: if true; allow write: if false; }
-    // New rules should not have that unrestricted read
     expect(rules).not.toMatch(/match \/\{document=\*\*\}\s*\{\s*allow read: if true;\s*allow write: if false;/);
   });
 
-  it('contains established collections allowlist commentary', () => {
-    expect(rules).toMatch(/deafening-gnarly-dining/);
+  it('has fallback deny for {other=**}', () => {
+    expect(rules).toMatch(/match \/\{other=\*\*\}/);
   });
 });

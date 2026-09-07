@@ -1,19 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Established cookbook collection — read + write allowed via normal SDK
-    // Write access limited to established collection; no arbitrary collection creation
-    // Redeploy with: firebase deploy --only firestore:rules --project yes-chef-cookbook
-    match /deafening-gnarly-dining/{docId} {
-      allow read, write: if true;
-    }
-    match /deafening-gnarly-dining/metadata {
-      allow read, write: if true;
-    }
+    // Config — which collections are established is stored in Firestore itself
+    // Do not hardcode collection keys here; rely on existence of metadata doc
     match /config/{docId} {
       allow read: if true;
       allow write: if false;
     }
+    // Any collection: read allowed, write allowed only if collection is already established
+    // (has a metadata doc). This prevents arbitrary new collections via client SDK.
+    // All frontend calls go through the app server (which uses Firestore SDK with same rules),
+    // but the server is the only caller that will be used in practice.
+    match /{collection}/{docId} {
+      allow read: if true;
+      allow create, update, delete: if exists(/databases/$(database)/documents/$(collection)/metadata);
+    }
+    // Fallback deny (should not be reached due to above, but explicit)
     match /{other=**} {
       allow read, write: if false;
     }
