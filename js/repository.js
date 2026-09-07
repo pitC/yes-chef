@@ -166,32 +166,18 @@ export async function fetchAllRecipes({ onStatus } = {}) {
       const badKey = loadStoredCollectionKey();
       if (badKey) removeStoredCollectionKey(badKey);
       if (onStatus) onStatus('Invalid code — please re-enter');
-      // Try to re-prompt if statusEl is available in DOM
-      const statusEl = document.getElementById('firestore-status');
-      if (statusEl) {
-        // Clear any existing prompt and show again
-        statusEl.innerHTML = '';
-        statusEl.style.display = 'none';
-        if (typeof window !== 'undefined' && window.location) {
-          // Show setup again on next tick
-          setTimeout(() => {
-            ensureSyncConfig(statusEl).then(() => {
-              statusEl.style.display = 'none';
-              statusEl.innerHTML = '';
-              window.location.reload();
-            });
-          }, 300);
-        }
-      }
-      throw new Error(`HTTP ${resp.status}`);
+      throw new Error('Invalid cookbook code — please re-enter');
     }
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const recipes = await resp.json();
     if (onStatus) onStatus('Synced');
     return Array.isArray(recipes) ? recipes : [];
   } catch (e) {
+    if (String(e.message).includes('Invalid code') || String(e.message).includes('401')) {
+      throw e;
+    }
     console.error('[Yes Chef] Repository fetch error', e);
-    if (onStatus && !String(e.message).includes('401')) onStatus('Local only (sync failed)');
+    if (onStatus) onStatus('Local only (sync failed)');
     return [];
   }
 }

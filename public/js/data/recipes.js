@@ -25,7 +25,17 @@ async function loadRecipes() {
         recipesCache = remote;
         return recipesCache;
       }
+      // If fetch returned [] due to 401, it already handled re-prompt; don't fallback silently
+      if (remote.length === 0) {
+        const hasCode = typeof localStorage !== 'undefined' && localStorage.getItem('yesChefFirestoreCollection');
+        if (hasCode) {
+          throw new Error('Invalid cookbook code — please re-enter');
+        }
+      }
     } catch (e) {
+      if (String(e.message).includes('401') || String(e.message).includes('Invalid') || String(e.message).includes('cookbook code')) {
+        throw e;
+      }
       console.error('[Yes Chef] Failed to load recipes from Firestore, falling back to local', e);
     }
   }
