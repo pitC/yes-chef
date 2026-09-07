@@ -4,7 +4,7 @@ import { viewManager } from './views/view-manager.js';
 import { renderBrowseView } from './views/browse.js';
 import { renderDetailView } from './views/detail.js';
 import { renderCookingView } from './views/cooking.js';
-import { ensureSyncConfig } from './firestore.js';
+import { ensureSyncConfig } from './repository.js';
 
 console.error('Yes Chef app initializing...');
 

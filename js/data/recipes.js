@@ -1,4 +1,4 @@
-import { fetchAllRecipes, fetchRecipe } from '../firestore.js';
+import { fetchAllRecipes, fetchRecipe } from '../repository.js';
 
 let recipesCache = null;
 

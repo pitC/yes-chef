@@ -12,6 +12,9 @@ coverage/
 js/firebase-config.js
 firebase-config.js
 **/firebase-config.js
+# App server config — generated at deploy, not committed
+js/app-config.js
+**/app-config.js
 # Service account & env
 service-account.json
 *.service-account.json
