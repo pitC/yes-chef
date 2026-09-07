@@ -25,11 +25,12 @@ async function loadRecipes() {
         recipesCache = remote;
         return recipesCache;
       }
-      // If fetch returned [] due to 401, it already handled re-prompt; don't fallback silently
       if (remote.length === 0) {
         const hasCode = typeof localStorage !== 'undefined' && localStorage.getItem('yesChefFirestoreCollection');
+        // Valid empty cookbook — show empty state, don't fallback to bundled menemen
         if (hasCode) {
-          throw new Error('Invalid cookbook code — please re-enter');
+          recipesCache = remote;
+          return recipesCache;
         }
       }
     } catch (e) {
@@ -50,8 +51,11 @@ async function loadRecipesFresh() {
     try {
       const remote = await fetchAllRecipes({});
       if (remote.length > 0) return remote;
-      // eslint-disable-next-line no-empty
-    } catch {}
+    } catch (e) {
+      if (String(e.message).includes('401') || String(e.message).includes('Invalid') || String(e.message).includes('cookbook code')) {
+        throw e;
+      }
+    }
   }
   return loadFromLocal();
 }
@@ -66,8 +70,11 @@ export async function getRecipe(id) {
     try {
       const remote = await fetchRecipe({ recipeId: id });
       if (remote) return remote;
-      // eslint-disable-next-line no-empty
-    } catch {}
+    } catch (e) {
+      if (String(e.message).includes('401') || String(e.message).includes('Invalid') || String(e.message).includes('cookbook code')) {
+        throw e;
+      }
+    }
   }
   const recipes = await loadRecipes();
   return recipes.find((r) => r.id === id) || null;

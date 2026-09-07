@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getCollection, generateId, nowIso, slugify, doc, getDoc, getDocs, setDoc } from "./firestore.js";
+import { collection, getDb, getCollection, generateId, nowIso, slugify, doc, getDoc, getDocs, setDoc } from "./firestore.js";
 import { assertValidRecipe } from "./validation.js";
 
 // Zod schemas for ingredients/steps mirror schema.json closed enums
@@ -83,11 +83,17 @@ function normalizeRecipeForValidation(input: Record<string, unknown>): Record<st
   };
 }
 
-export function createMcpServer(): McpServer {
+export function createMcpServer(collectionName?: string): McpServer {
   const server = new McpServer({
     name: "yes-chef-recipes",
     version: "0.1.0",
   });
+
+  // Resolve collection per-request (multi-tenant) or fall back to discovery (legacy/stdio)
+  const getColForRequest = async () => {
+    if (collectionName) return collection(getDb(), collectionName);
+    return getCollection();
+  };
 
   // ── create_recipe ──────────────────────────────────────────────
   server.tool(
@@ -127,7 +133,7 @@ export function createMcpServer(): McpServer {
           return { content: [{ type: "text", text: `Validation failed: ${msg}` }], isError: true };
         }
 
-        const col = await getCollection();
+        const col = await getColForRequest();
         const existing = await getDoc(doc(col, docId));
         if (existing.exists()) {
           docId = `${docId}-${Math.random().toString(36).slice(2, 6)}`;
@@ -184,7 +190,7 @@ export function createMcpServer(): McpServer {
     },
     async ({ id, updates, recipe }) => {
       try {
-        const col = await getCollection();
+        const col = await getColForRequest();
         const ref = doc(col, id);
         const snap = await getDoc(ref);
         if (!snap.exists()) {
@@ -249,7 +255,7 @@ export function createMcpServer(): McpServer {
     },
     async ({ keyword, limit, field }) => {
       try {
-        const col = await getCollection();
+        const col = await getColForRequest();
         const snap = await getDocs(col);
       const q = keyword.toLowerCase();
       const scope = field ?? "all";

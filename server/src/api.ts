@@ -24,11 +24,25 @@ function getCollectionNameFromRequest(req: Request): string | null {
   return cleaned && !cleaned.includes("/") ? cleaned : null;
 }
 
+async function isCollectionEstablished(collectionName: string): Promise<boolean> {
+  try {
+    const col = collection(getDb(), collectionName);
+    const snap = await getDoc(doc(col, METADATA_ID));
+    return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
 export async function handleListRecipes(req: Request, res: Response): Promise<void> {
   try {
     const collectionName = getCollectionNameFromRequest(req);
     if (!collectionName) {
       res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
+    }
+    if (!(await isCollectionEstablished(collectionName))) {
+      res.status(401).json({ error: "Invalid cookbook code" });
       return;
     }
     const col = collection(getDb(), collectionName);
@@ -59,6 +73,10 @@ export async function handleGetRecipe(req: Request, res: Response): Promise<void
       res.status(401).json({ error: "Unauthorized: missing cookbook code" });
       return;
     }
+    if (!(await isCollectionEstablished(collectionName))) {
+      res.status(401).json({ error: "Invalid cookbook code" });
+      return;
+    }
     const col = collection(getDb(), collectionName);
     const snap = await getDoc(doc(col, id));
     if (!snap.exists()) {
@@ -79,6 +97,10 @@ export async function handleGetMetadata(req: Request, res: Response): Promise<vo
     const collectionName = getCollectionNameFromRequest(req);
     if (!collectionName) {
       res.status(401).json({ error: "Unauthorized: missing cookbook code" });
+      return;
+    }
+    if (!(await isCollectionEstablished(collectionName))) {
+      res.status(401).json({ error: "Invalid cookbook code" });
       return;
     }
     const col = collection(getDb(), collectionName);

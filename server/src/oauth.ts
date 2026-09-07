@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { randomBytes, createHash } from "node:crypto";
-import { getAuthToken } from "./firestore.js";
+import { getAuthToken, getDb, collection, doc, getDoc } from "./firestore.js";
+import { isCollectionEstablished as isCollectionEstablishedFromFirestore } from "./firestore.js";
 
 // In-memory stores — suitable for single-instance Cloud Run; for multi-instance use Firestore with TTL
 type Client = {
@@ -19,6 +20,7 @@ type AuthCode = {
   code_challenge?: string;
   code_challenge_method?: string;
   expiresAt: number;
+  collection: string;
   // we validate collection key at authorize step, so code is only issued if user proved knowledge of it
 };
 
@@ -28,6 +30,7 @@ type AccessToken = {
   scope?: string;
   expiresAt: number;
   refreshToken?: string;
+  collection: string;
 };
 
 const clients = new Map<string, Client>();
@@ -81,10 +84,49 @@ export function isValidOAuthToken(token: string): boolean {
   if (!token) return false;
   if (accessTokens.has(token)) return true;
   if (refreshTokens.has(token)) return true;
-  // Stateless fallback: MCP_TOKEN itself (survives restarts)
+  // Stateless fallback: MCP_TOKEN itself (survives restarts) — legacy single-tenant
   const expected = getAuthToken();
   if (expected && token === expected) return true;
   return false;
+}
+
+// Async variant for multi-tenant: checks OAuth maps, legacy token, and whether token IS a valid collection (stateless)
+export async function isValidOAuthTokenAsync(token: string): Promise<boolean> {
+  if (isValidOAuthToken(token)) return true;
+  const col = await resolveCollectionForToken(token);
+  return col !== null;
+}
+
+export async function resolveCollectionForToken(token: string): Promise<string | null> {
+  if (!token) return null;
+  const trimmed = token.trim().replace(/^\/+/, "");
+  if (!trimmed || trimmed.includes("/")) return null;
+  // 1) OAuth issued token (random or collection-based) — map lookup
+  const at = accessTokens.get(trimmed) || refreshTokens.get(trimmed);
+  if (at) return at.collection;
+  // 2) Legacy MCP_TOKEN — resolve to discovered collection via config/collections or treat as collection if valid
+  const legacy = getAuthToken();
+  if (legacy && trimmed === legacy) {
+    // Try to discover legacy collection; if discovery fails, treat token itself as collection only if valid
+    try {
+      const db = getDb();
+      const snap = await getDoc(doc(db, "config", "collections"));
+      if (snap.exists()) {
+        const data = snap.data() as Record<string, unknown> | undefined;
+        const name =
+          (data?.established as string) ||
+          (data?.collection as string) ||
+          (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
+        if (name && typeof name === "string" && name.trim() && !name.includes("/")) return name.trim();
+      }
+    } catch {}
+    // Fallback: check if token itself is a valid collection
+    if (await isCollectionEstablishedFromFirestore(trimmed)) return trimmed;
+    return null;
+  }
+  // 3) Direct collection code — check Firestore (stateless, survives restarts)
+  if (await isCollectionEstablishedFromFirestore(trimmed)) return trimmed;
+  return null;
 }
 
 // ── Discovery ────────────────────────────────────────────────────────────
@@ -217,7 +259,7 @@ export function handleAuthorizeGet(req: Request, res: Response): void {
   }));
 }
 
-export function handleAuthorizePost(req: Request, res: Response): void {
+export async function handleAuthorizePost(req: Request, res: Response): Promise<void> {
   // Form posts as urlencoded; also handle JSON if needed
   const body = req.body || {};
   const tokenInput = (body.token || body.collection_key || body.collectionKey || body.password || "").toString().trim();
@@ -234,10 +276,38 @@ export function handleAuthorizePost(req: Request, res: Response): void {
     return;
   }
 
-  const expected = getAuthToken();
-  const isValidToken = expected && tokenInput && tokenInput === expected;
+  // Multi-tenant: validate against Firestore collection existence (any established cookbook).
+  // Also support legacy MCP_TOKEN for backward compat.
+  let resolvedCollection: string | null = null;
+  if (tokenInput) {
+    const cleaned = tokenInput.trim().replace(/^\/+/, "");
+    if (cleaned && !cleaned.includes("/")) {
+      const legacy = getAuthToken();
+      if (legacy && cleaned === legacy) {
+        // Legacy token — resolve to discovered collection if possible
+        try {
+          const db = getDb();
+          const snap = await getDoc(doc(db, "config", "collections"));
+          if (snap.exists()) {
+            const data = snap.data() as Record<string, unknown> | undefined;
+            const name =
+              (data?.established as string) ||
+              (data?.collection as string) ||
+              (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
+            if (name && typeof name === "string" && name.trim() && !name.includes("/")) resolvedCollection = name.trim();
+          }
+        } catch {}
+        if (!resolvedCollection && (await isCollectionEstablishedFromFirestore(cleaned))) resolvedCollection = cleaned;
+        if (!resolvedCollection) resolvedCollection = cleaned; // allow legacy even without Firestore check (emulator)
+      } else if (await isCollectionEstablishedFromFirestore(cleaned)) {
+        resolvedCollection = cleaned;
+      }
+    }
+  }
 
-  if (!isValidToken) {
+  const isValidToken = resolvedCollection !== null;
+
+  if (!isValidToken || !resolvedCollection) {
     const qs = new URLSearchParams({
       response_type: "code",
       client_id,
@@ -275,6 +345,7 @@ export function handleAuthorizePost(req: Request, res: Response): void {
     code_challenge: code_challenge || undefined,
     code_challenge_method: code_challenge_method || undefined,
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 min
+    collection: resolvedCollection,
   });
 
   const redirectUrl = new URL(redirect_uri);
@@ -330,7 +401,7 @@ function authorizeFormHtml(opts: {
 
 // ── Token ─────────────────────────────────────────────────────────────────
 
-export function handleToken(req: Request, res: Response): void {
+export async function handleToken(req: Request, res: Response): Promise<void> {
   // Body is x-www-form-urlencoded or JSON
   const body: Record<string, string> = req.body || {};
   // Also parse query fallback?
@@ -385,9 +456,9 @@ export function handleToken(req: Request, res: Response): void {
       }
     }
 
-    // Issue tokens — stateless indefinite: use RECIPES_COLLECTION as token itself
-    // Survives Cloud Run restarts/scale-to-zero; validated via provided === expected in requireMcpAuth
-    const statelessToken = getAuthToken();
+    // Multi-tenant: issue token tied to collection from authCode.
+    // Use stateless collection code as token so it survives restarts (validated via isCollectionEstablished).
+    const statelessToken = entry.collection;
     const expiresIn = 2147483647; // ~68 years, effectively indefinite for Claude
     const expiresAt = Number.MAX_SAFE_INTEGER;
     const atEntry: AccessToken = {
@@ -396,6 +467,7 @@ export function handleToken(req: Request, res: Response): void {
       scope: entry.scope,
       expiresAt,
       refreshToken: statelessToken,
+      collection: entry.collection,
     };
     accessTokens.set(statelessToken, atEntry);
     refreshTokens.set(statelessToken, { ...atEntry, token: statelessToken, expiresAt: Number.MAX_SAFE_INTEGER });
@@ -418,18 +490,42 @@ export function handleToken(req: Request, res: Response): void {
       res.status(400).json({ error: "invalid_request", error_description: "refresh_token required" });
       return;
     }
-     // Stateless token: any refresh with valid MCP_TOKEN succeeds, even if Map empty after restart
-     const expected = getAuthToken();
-     const isStatelessRefresh = expected && refreshToken === expected;
     let entry = refreshTokens.get(refreshToken);
-    if (!entry && !isStatelessRefresh) {
+    // Stateless fallback: if refreshToken itself is a valid collection, allow (survives restart)
+    let statelessCollection: string | null = null;
+    if (!entry) {
+      const cleaned = refreshToken.trim().replace(/^\/+/, "");
+      if (cleaned && !cleaned.includes("/")) {
+        const legacy = getAuthToken();
+        if (legacy && cleaned === legacy) {
+          try {
+            const db = getDb();
+            const snap = await getDoc(doc(db, "config", "collections"));
+            if (snap.exists()) {
+              const data = snap.data() as Record<string, unknown> | undefined;
+              const name =
+                (data?.established as string) ||
+                (data?.collection as string) ||
+                (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
+              if (name && typeof name === "string" && name.trim() && !name.includes("/")) statelessCollection = name.trim();
+            }
+          } catch {}
+          if (!statelessCollection && (await isCollectionEstablishedFromFirestore(cleaned))) statelessCollection = cleaned;
+          if (!statelessCollection) statelessCollection = cleaned;
+        } else if (await isCollectionEstablishedFromFirestore(cleaned)) {
+          statelessCollection = cleaned;
+        }
+      }
+    }
+    if (!entry && !statelessCollection) {
       res.status(400).json({ error: "invalid_grant", error_description: "invalid refresh_token" });
       return;
     }
     if (clientId && entry && entry.client_id !== clientId) {
       console.warn(`[oauth] refresh client_id mismatch`);
     }
-    const statelessToken = expected;
+    const statelessToken = statelessCollection || entry!.collection;
+    const collectionForToken = entry?.collection || statelessCollection!;
     const expiresIn = 2147483647;
     const expiresAt = Number.MAX_SAFE_INTEGER;
     const atEntry: AccessToken = {
@@ -438,6 +534,7 @@ export function handleToken(req: Request, res: Response): void {
       scope: entry?.scope || "mcp",
       expiresAt,
       refreshToken: statelessToken,
+      collection: collectionForToken,
     };
     accessTokens.set(statelessToken, atEntry);
     refreshTokens.set(statelessToken, { ...atEntry, token: statelessToken, expiresAt: Number.MAX_SAFE_INTEGER });

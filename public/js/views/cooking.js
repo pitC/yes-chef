@@ -73,7 +73,34 @@ function savePrepDone() {
 
 export async function renderCookingView(params, container) {
   if (!container) container = document.getElementById('app') || document.body;
-  const recipe = await getRecipe(params.id);
+  let recipe;
+  try {
+    recipe = await getRecipe(params.id);
+  } catch (e) {
+    const isAuthError = String(e.message).includes('Invalid') || String(e.message).includes('401') || String(e.message).includes('cookbook code');
+    if (isAuthError) {
+      container.innerHTML = `
+        <div class="error-state" style="padding: 24px; text-align: center;">
+          <p style="color: #b91c1c; font-weight: 600; margin-bottom: 12px;">Invalid cookbook code — please check and try again.</p>
+          <p style="color: #666; margin-bottom: 16px;">The code you entered is not valid. Please re-enter the correct code.</p>
+          <button class="primary" id="retry-code">Re-enter code</button>
+          <button id="use-local">Use local recipes</button>
+        </div>
+      `;
+      container.querySelector('#retry-code').addEventListener('click', () => {
+        localStorage.removeItem('yesChefFirestoreCollection');
+        localStorage.removeItem('yesChefFirestoreSkipped');
+        window.location.reload();
+      });
+      container.querySelector('#use-local').addEventListener('click', async () => {
+        localStorage.setItem('yesChefFirestoreSkipped', '1');
+        localStorage.removeItem('yesChefFirestoreCollection');
+        window.location.reload();
+      });
+      return () => {};
+    }
+    throw e;
+  }
   if (!recipe) {
     container.innerHTML = '<div class="error-state">Recipe not found</div>';
     return;

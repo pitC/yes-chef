@@ -15,7 +15,7 @@ import {
   handleAuthorizePost,
   handleToken,
   handleRevoke,
-  isValidOAuthToken,
+  resolveCollectionForToken,
 } from "./oauth.js";
 
 // Load .env if present (optional, no extra dep)
@@ -73,7 +73,8 @@ async function runHttp(): Promise<void> {
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ extended: false }));
 
-  // ── Simple token auth — backed by MCP_TOKEN (Secret Manager), not RECIPES_COLLECTION ──
+  // ── Multi-tenant token auth — each cookbook code is a bearer token ──
+  // Backed by Firestore metadata existence, not a single MCP_TOKEN env var (legacy fallback kept).
   // Compatible with Claude: expects `Authorization: Bearer <token>` header.
   // Health checks are unauthenticated.
   function extractBearerToken(req: express.Request): string | undefined {
@@ -94,7 +95,7 @@ async function runHttp(): Promise<void> {
     return undefined;
   }
 
-  function requireMcpAuth(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  async function requireMcpAuth(req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> {
     // Allow CORS preflight without auth
     if (req.method === "OPTIONS") {
       next();
@@ -115,13 +116,20 @@ async function runHttp(): Promise<void> {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
-    const expected = getAuthToken();
-    // If MCP_TOKEN is set, check against it or OAuth token; otherwise accept any non-empty token
-    // that is a valid collection code (no slashes, non-empty) — the API handler will validate existence
-    const isValid = expected
-      ? provided === expected || isValidOAuthToken(provided)
-      : provided.trim().length > 0 && !provided.includes("/");
-    if (!isValid) {
+    try {
+      const collectionName = await resolveCollectionForToken(provided);
+      if (!collectionName) {
+        const issuer = getIssuer(req);
+        res.setHeader(
+          "WWW-Authenticate",
+          `Bearer realm="yes-chef-mcp", resource_metadata="${issuer}/.well-known/oauth-protected-resource", error="invalid_token"`
+        );
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      (req as unknown as Record<string, unknown>).collectionName = collectionName;
+    } catch (e) {
+      console.error("[mcp] auth resolve failed:", e);
       const issuer = getIssuer(req);
       res.setHeader(
         "WWW-Authenticate",
@@ -181,18 +189,27 @@ async function runHttp(): Promise<void> {
 
   // Authorization + Token — Claude "Always required" flow (authorization_code + PKCE)
   app.get("/authorize", handleAuthorizeGet);
-  app.post("/authorize", handleAuthorizePost);
-  app.post("/token", handleToken);
-  app.post("/oauth/token", handleToken);
-  app.post("/oauth2/token", handleToken);
+  app.post("/authorize", (req, res, next) => {
+    handleAuthorizePost(req, res).catch(next);
+  });
+  app.post("/token", (req, res, next) => {
+    handleToken(req, res).catch(next);
+  });
+  app.post("/oauth/token", (req, res, next) => {
+    handleToken(req, res).catch(next);
+  });
+  app.post("/oauth2/token", (req, res, next) => {
+    handleToken(req, res).catch(next);
+  });
   app.post("/revoke", handleRevoke);
   app.post("/oauth/revoke", handleRevoke);
 
   // Streamable HTTP endpoint — stateless per-request server instance (safe for Cloud Run scaling)
   // All MCP endpoints require Bearer auth (Claude-compatible). Health checks above remain open.
   app.post("/mcp", requireMcpAuth, async (req, res) => {
-    // Create a fresh server+transport per request for stateless operation
-    const server = createMcpServer();
+    // Create a fresh server+transport per request for stateless operation (collection per token)
+    const collectionName = (req as unknown as Record<string, unknown>).collectionName as string | undefined;
+    const server = createMcpServer(collectionName);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // stateless
       enableJsonResponse: true,
@@ -209,7 +226,8 @@ async function runHttp(): Promise<void> {
 
   // Optional SSE support for older MCP clients that do GET /mcp
   app.get("/mcp", requireMcpAuth, async (req, res) => {
-    const server = createMcpServer();
+    const collectionName = (req as unknown as Record<string, unknown>).collectionName as string | undefined;
+    const server = createMcpServer(collectionName);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -222,7 +240,8 @@ async function runHttp(): Promise<void> {
 
   // Graceful: also support POST /sse legacy if clients expect it
   app.post("/sse", requireMcpAuth, async (req, res) => {
-    const server = createMcpServer();
+    const collectionName = (req as unknown as Record<string, unknown>).collectionName as string | undefined;
+    const server = createMcpServer(collectionName);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -232,7 +251,8 @@ async function runHttp(): Promise<void> {
     await transport.handleRequest(req, res, req.body);
   });
   app.get("/sse", requireMcpAuth, async (req, res) => {
-    const server = createMcpServer();
+    const collectionName = (req as unknown as Record<string, unknown>).collectionName as string | undefined;
+    const server = createMcpServer(collectionName);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -246,10 +266,14 @@ async function runHttp(): Promise<void> {
   app.listen(port, "0.0.0.0", () => {
     const token = getAuthToken();
     const masked = token ? `${token.slice(0, 4)}***` : "(not set)";
-    const authInfo = process.env.MCP_NO_AUTH === "1" || process.env.MCP_AUTH_DISABLED === "1" ? "disabled (MCP_NO_AUTH)" : `enabled (MCP_TOKEN="${masked}")`;
+    const legacyInfo = token ? ` legacy MCP_TOKEN="${masked}" (fallback)` : "";
+    const authInfo =
+      process.env.MCP_NO_AUTH === "1" || process.env.MCP_AUTH_DISABLED === "1"
+        ? "disabled (MCP_NO_AUTH)"
+        : `multi-tenant (cookbook code)${legacyInfo}`;
     console.log(`[mcp] HTTP server listening on 0.0.0.0:${port} — endpoint POST /mcp`);
-    console.log(`[mcp] Collection: dynamic (discovered via Firestore) project: ${process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || "(ADC)"}`);
-    console.log(`[mcp] Auth: ${authInfo} — use 'Authorization: Bearer <token>' (Claude-compatible). Health checks (/, /health) are unauthenticated.`);
+    console.log(`[mcp] Collections: per-token (Firestore metadata) project: ${process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || "(ADC)"}`);
+    console.log(`[mcp] Auth: ${authInfo} — use 'Authorization: Bearer <cookbook-code>' (Claude-compatible). Health checks (/, /health) are unauthenticated.`);
   });
 }
 

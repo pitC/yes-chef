@@ -173,7 +173,7 @@ export async function fetchAllRecipes({ onStatus } = {}) {
     if (onStatus) onStatus('Synced');
     return Array.isArray(recipes) ? recipes : [];
   } catch (e) {
-    if (String(e.message).includes('Invalid code') || String(e.message).includes('401')) {
+    if (String(e.message).includes('Invalid') || String(e.message).includes('401') || String(e.message).includes('cookbook code')) {
       throw e;
     }
     console.error('[Yes Chef] Repository fetch error', e);
@@ -192,10 +192,19 @@ export async function fetchRecipe({ recipeId, onStatus } = {}) {
     const auth = getAuthHeader();
     if (auth) headers.Authorization = auth;
     const resp = await fetch(`${base}/api/recipes/${encodeURIComponent(rid)}`, { headers });
+    if (resp.status === 401) {
+      const badKey = loadStoredCollectionKey();
+      if (badKey) removeStoredCollectionKey(badKey);
+      if (onStatus) onStatus('Invalid code — please re-enter');
+      throw new Error('Invalid cookbook code — please re-enter');
+    }
     if (!resp.ok) return null;
     const data = await resp.json();
     return data;
   } catch (e) {
+    if (String(e.message).includes('Invalid') || String(e.message).includes('401') || String(e.message).includes('cookbook code')) {
+      throw e;
+    }
     console.error(`[Yes Chef] Repository fetch error for recipe "${rid}"`, e);
     if (onStatus) onStatus('Local only (sync failed)');
     return null;

@@ -117,7 +117,19 @@ export function _clearCachedCollectionForTests(): void {
   discoveryPromise = null;
 }
 
-/** Token for HTTP auth — backed by MCP_TOKEN (Secret Manager), not collection name */
+/** Check if a Firestore collection is established (has metadata doc) — used for multi-tenant auth */
+export async function isCollectionEstablished(collectionName: string): Promise<boolean> {
+  if (!collectionName || !collectionName.trim() || collectionName.includes("/")) return false;
+  try {
+    const col = collection(getDb(), collectionName.trim());
+    const snap = await getDoc(doc(col, "metadata"));
+    return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
+/** Legacy single-tenant token — backed by MCP_TOKEN (Secret Manager). Kept for backward compat; multi-tenant prefers collection codes. */
 export function getAuthToken(): string {
   const token = (process.env.MCP_TOKEN || process.env.MCP_AUTH_TOKEN || "").trim();
   if (token) return token;
@@ -126,6 +138,14 @@ export function getAuthToken(): string {
 
 export function isAuthDisabled(): boolean {
   return process.env.MCP_NO_AUTH === "1" || process.env.MCP_NO_AUTH === "true" || process.env.MCP_AUTH_DISABLED === "1" || process.env.MCP_AUTH_DISABLED === "true";
+}
+
+/** Resolve a collection name from a token — if token is a valid collection, return it. */
+export async function resolveCollectionFromToken(token: string): Promise<string | null> {
+  const cleaned = token.trim().replace(/^\/+/, "");
+  if (!cleaned || cleaned.includes("/")) return null;
+  if (await isCollectionEstablished(cleaned)) return cleaned;
+  return null;
 }
 
 export async function getCollection(): Promise<CollectionReference> {

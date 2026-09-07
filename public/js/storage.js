@@ -55,6 +55,9 @@ export function removeStoredCollectionKey(collectionKey) {
   if (!s) return;
   const keys = loadStoredCollectionKeys().filter((k) => k !== collectionKey);
   s.setItem(COLLECTION_KEYS_KEY, JSON.stringify(keys));
+  if (s.getItem(COLLECTION_KEY) === collectionKey) {
+    s.removeItem(COLLECTION_KEY);
+  }
 }
 
 export function markFirestoreSkipped() {
