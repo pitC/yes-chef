@@ -1,12 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Read-only without auth — each recipe is a separate document: /{cookbookId}/{recipeId}
-    // Obscurity via secret cookbookId; no allowlist, no writes.
+    // Established cookbook collection — read + write allowed via normal SDK
+    // Write access limited to established collection; no arbitrary collection creation
     // Redeploy with: firebase deploy --only firestore:rules --project yes-chef-cookbook
-    match /{document=**} {
+    match /deafening-gnarly-dining/{docId} {
+      allow read, write: if true;
+    }
+    match /deafening-gnarly-dining/metadata {
+      allow read, write: if true;
+    }
+    match /config/{docId} {
       allow read: if true;
       allow write: if false;
+    }
+    match /{other=**} {
+      allow read, write: if false;
     }
   }
 }
