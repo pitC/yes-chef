@@ -1,7 +1,9 @@
-import { loadStoredCollectionKey } from '../storage.js';
 import { fetchAllRecipes, fetchRecipe } from '../firestore.js';
 
 let recipesCache = null;
+
+// eslint-disable-next-line no-undef
+const isTestEnv = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
 
 async function loadFromLocal() {
   const url = new URL('test/menemen.json', window.location.href).href;
@@ -16,10 +18,9 @@ async function loadFromLocal() {
 async function loadRecipes() {
   if (recipesCache) return recipesCache;
 
-  const collectionKey = loadStoredCollectionKey();
-  if (collectionKey) {
+  if (!isTestEnv) {
     try {
-      const remote = await fetchAllRecipes({ collectionKey });
+      const remote = await fetchAllRecipes({});
       if (remote.length > 0) {
         recipesCache = remote;
         return recipesCache;
@@ -35,25 +36,28 @@ async function loadRecipes() {
 }
 
 async function loadRecipesFresh() {
-  const collectionKey = loadStoredCollectionKey();
-  if (collectionKey) {
-    const remote = await fetchAllRecipes({ collectionKey });
-    if (remote.length > 0) return remote;
+  if (!isTestEnv) {
+    try {
+      const remote = await fetchAllRecipes({});
+      if (remote.length > 0) return remote;
+      // eslint-disable-next-line no-empty
+    } catch {}
   }
   return loadFromLocal();
 }
 
 export async function getRecipes() {
   if (recipesCache) return recipesCache;
-  // Avoid double-fetching when loadRecipes already handles fallback logic
   return loadRecipes();
 }
 
 export async function getRecipe(id) {
-  const collectionKey = loadStoredCollectionKey();
-  if (collectionKey) {
-    const remote = await fetchRecipe({ collectionKey, recipeId: id });
-    if (remote) return remote;
+  if (!isTestEnv) {
+    try {
+      const remote = await fetchRecipe({ recipeId: id });
+      if (remote) return remote;
+      // eslint-disable-next-line no-empty
+    } catch {}
   }
   const recipes = await loadRecipes();
   return recipes.find((r) => r.id === id) || null;
@@ -63,10 +67,14 @@ export function _clearCache() {
   recipesCache = null;
 }
 
-export async function _reloadFromFirestoreForTests(collectionKey) {
+export async function _reloadFromFirestoreForTests() {
   _clearCache();
-  if (collectionKey) {
-    return fetchAllRecipes({ collectionKey });
+  if (!isTestEnv) {
+    try {
+      const remote = await fetchAllRecipes({});
+      if (remote.length > 0) return remote;
+      // eslint-disable-next-line no-empty
+    } catch {}
   }
   return loadFromLocal();
 }

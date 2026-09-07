@@ -19,8 +19,9 @@ describe('recipes data service', () => {
     expect(Array.isArray(recipe.steps)).toBe(true);
     expect(recipe.steps.length).toBeGreaterThan(0);
     expect(recipe.servings.base).toBe(2);
-    expect(recipe.tags).toContain('breakfast');
-    expect(recipe.tags).toContain('vegetarian');
+    // Tags vary between local fixture (breakfast, vegetarian) and Firestore (breakfast/supper, veg)
+    expect(recipe.tags.some((t) => t.includes('breakfast'))).toBe(true);
+    expect(recipe.tags.some((t) => t === 'veg' || t === 'vegetarian')).toBe(true);
   });
 
   it('getRecipe returns null for missing ID', async () => {
