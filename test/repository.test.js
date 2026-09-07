@@ -7,10 +7,15 @@ describe('repository.js — generic, no Firestore direct, no hardcoding', () => 
 
   it('repository does not hardcode collection key and does not import firestore SDK', () => {
     expect(repoSrc).not.toMatch(/deafening-gnarly-dining/);
-    expect(repoSrc).not.toMatch(/firestore/);
-    expect(repoSrc).not.toMatch(/firebase/);
+    // Should not import Firestore SDK directly — all via app server
+    expect(repoSrc).not.toMatch(/from ['"]firebase\/firestore['"]/);
+    expect(repoSrc).not.toMatch(/getFirestoreApi/);
     expect(repoSrc).not.toMatch(/RECIPES_COLLECTION/);
-    expect(repoSrc).not.toMatch(/loadStoredCollectionKey/);
+    // Should use storage for code and send as Bearer token
+    expect(repoSrc).toMatch(/loadStoredCollectionKey/);
+    expect(repoSrc).toMatch(/saveStoredCollectionKey/);
+    expect(repoSrc).toMatch(/Authorization/);
+    expect(repoSrc).toMatch(/Bearer/);
   });
 
   it('repository proxies via app server (APP_SERVER_URL + /api)', () => {
