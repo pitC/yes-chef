@@ -29,3 +29,6 @@ service-account.json
 terraform/.budget-cap.zip
 # API key guard
 **/AIza*
+# Public generated configs (prod)
+public/js/app-config.js
+public/js/firebase-config.js
