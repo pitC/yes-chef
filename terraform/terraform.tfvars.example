@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (gitignored) and fill — never commit real values
+project_id         = "yes-chef-cookbook"
+project_number     = "158345618336"
+region             = "europe-west1"
+firestore_location = "nam5"
+bucket_name        = "yes-chef-static-yes-chef-cookbook"
+run_service_name   = "yes-chef-cookbook"
+billing_account_id = "012C2A-E1DB49-8C3E18"
+budget_amount      = 10
+
+# Sensitive — inject via TF_VAR_mcp_token or Secret Manager `mcp-token`, not here:
+# mcp_token = ""
+
+# Container image — set via TF_VAR_image or leave empty for Cloud Build:
+# image = "europe-west1-docker.pkg.dev/yes-chef-cookbook/cloud-run-source-deploy/yes-chef-cookbook:latest"
