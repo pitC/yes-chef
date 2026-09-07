@@ -24,7 +24,7 @@ resource "google_secret_manager_secret" "mcp_token" {
 
 # Optionally populate via `gcloud secrets versions add` — not via TF (to avoid TF_VAR leakage):
 # echo -n '{"apiKey":"...","authDomain":"yes-chef-cookbook.firebaseapp.com","projectId":"yes-chef-cookbook","storageBucket":"...","messagingSenderId":"158345618336","appId":"1:..."}' | gcloud secrets versions add firebase-config --data-file=- --project=yes-chef-cookbook
-# echo -n "deafening-gnarly-dining-or-new-token" | gcloud secrets versions add mcp-token --data-file=- --project=yes-chef-cookbook
+# echo -n "your-mcp-token" | gcloud secrets versions add mcp-token --data-file=- --project=yes-chef-cookbook
 
 # Grant Cloud Run SA access to secrets
 resource "google_secret_manager_secret_iam_member" "firebase_config_accessor" {

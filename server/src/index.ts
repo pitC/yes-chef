@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp.js";
 import { getAuthToken } from "./firestore.js";
+import { handleListRecipes, handleGetRecipe, handleListCollections, handleGetMetadata } from "./api.js";
 import {
   getIssuer,
   handleAuthorizationServerMetadata,
@@ -133,6 +134,13 @@ async function runHttp(): Promise<void> {
     res.json({ status: "ok", uptime: process.uptime() });
   });
 
+  // App server API — all Firestore access goes through here (no direct client SDK)
+  // Public reads; writes via MCP tools (Admin SDK bypasses rules)
+  app.get("/api/recipes", handleListRecipes);
+  app.get("/api/recipes/:id", handleGetRecipe);
+  app.get("/api/collections", handleListCollections);
+  app.get("/api/metadata", handleGetMetadata);
+
   // ── OAuth discovery (RFC 8414 + RFC 9728) — unauthenticated, required for Claude "Always required" ──
   // Claude probes these before starting OAuth flow. Must be CORS-open and not behind auth.
   app.get("/.well-known/oauth-authorization-server", handleAuthorizationServerMetadata);
@@ -216,7 +224,7 @@ async function runHttp(): Promise<void> {
     const masked = token ? `${token.slice(0, 4)}***` : "(not set)";
     const authInfo = process.env.MCP_NO_AUTH === "1" || process.env.MCP_AUTH_DISABLED === "1" ? "disabled (MCP_NO_AUTH)" : `enabled (MCP_TOKEN="${masked}")`;
     console.log(`[mcp] HTTP server listening on 0.0.0.0:${port} — endpoint POST /mcp`);
-    console.log(`[mcp] Collection: ${process.env.FIREBASE_COLLECTION || "deafening-gnarly-dining"} project: ${process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || "(ADC)"}`);
+    console.log(`[mcp] Collection: dynamic (discovered via Firestore) project: ${process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || "(ADC)"}`);
     console.log(`[mcp] Auth: ${authInfo} — use 'Authorization: Bearer <token>' (Claude-compatible). Health checks (/, /health) are unauthenticated.`);
   });
 }

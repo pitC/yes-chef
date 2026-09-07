@@ -26,11 +26,11 @@ Env:
 ```
 FIREBASE_PROJECT_ID=yes-chef-cookbook
 GOOGLE_APPLICATION_CREDENTIALS=./service-account.json # local only, not in Cloud Run
-RECIPES_COLLECTION=recipes            # also the Bearer token for MCP HTTP auth
+MCP_TOKEN=your-mcp-token            # Bearer token for MCP HTTP auth (Secret Manager mcp-token)
 PORT=8080
 FIRESTORE_EMULATOR_HOST=localhost:8080 # optional
 MCP_NO_AUTH=1                          # optional: disable auth locally (emulator)
-# Clients must send: Authorization: Bearer <RECIPES_COLLECTION>
+# Clients must send: Authorization: Bearer <MCP_TOKEN>
 ```
 
 Local Firestore emulator:
@@ -42,14 +42,14 @@ FIRESTORE_EMULATOR_HOST=localhost:8080 npm run dev
 
 ## Authentication (Claude-compatible)
 
-All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `RECIPES_COLLECTION`** (the Firestore collection key), normalized without leading `/`.
+All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `MCP_TOKEN`** (the Firestore collection key), normalized without leading `/`.
 
 - Health checks (`/` and `/health`) are **unauthenticated** (required for Cloud Run).
 - `stdio` transport bypasses HTTP auth.
-- Accepted: `Authorization: Bearer <RECIPES_COLLECTION>` (primary, Claude-compatible), also `X-Api-Key: <token>`, `X-Collection-Key: <token>`, or `?token=<token>` query param.
+- Accepted: `Authorization: Bearer <MCP_TOKEN>` (primary, Claude-compatible), also `X-Api-Key: <token>`, `X-Collection-Key: <token>`, or `?token=<token>` query param.
 - Invalid/missing token → `401 Unauthorized` + `WWW-Authenticate: Bearer realm="yes-chef-mcp"` (so Claude surfaces auth error).
 - To disable auth locally (emulator): `MCP_NO_AUTH=1` or `MCP_AUTH_DISABLED=1`.
-- Collection example: `RECIPES_COLLECTION=deafening-gnarly-dining` → token `deafening-gnarly-dining` (also accepts `/deafening-gnarly-dining`).
+- Collection example: `MCP_TOKEN=your-mcp-token` → token `your-mcp-token` (also accepts `/your-mcp-token`).
 
 ### Claude configuration
 
@@ -62,7 +62,7 @@ All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `RECIP
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://<cloud-run-url>/mcp"],
       "headers": {
-        "Authorization": "Bearer deafening-gnarly-dining"
+        "Authorization": "Bearer your-mcp-token"
       }
     }
   }
@@ -72,9 +72,9 @@ All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `RECIP
 Or with direct Streamable HTTP (Claude 2026+ remote MCP):
 
 - URL: `https://<cloud-run-url>/mcp`
-- Header: `Authorization: Bearer deafening-gnarly-dining`
+- Header: `Authorization: Bearer your-mcp-token`
 
-**claude.ai custom connector**: Add server URL `https://<cloud-run-url>/mcp` and set header `Authorization: Bearer <RECIPES_COLLECTION>`.
+**claude.ai custom connector**: Add server URL `https://<cloud-run-url>/mcp` and set header `Authorization: Bearer <MCP_TOKEN>`.
 
 ## MCP endpoints (HTTP)
 
@@ -89,17 +89,17 @@ Or with direct Streamable HTTP (Claude 2026+ remote MCP):
 # Health (no auth)
 curl -s http://localhost:8080/health
 
-# MCP (auth required) — use RECIPES_COLLECTION as token
+# MCP (auth required) — use MCP_TOKEN as token
 curl -s http://localhost:8080/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  -H 'Authorization: Bearer deafening-gnarly-dining' \
+  -H 'Authorization: Bearer your-mcp-token' \
   -d '{
     "jsonrpc":"2.0","id":1,"method":"tools/list","params":{}
   }'
 
 # Alternative header
-curl -s http://localhost:8080/mcp -H 'X-Api-Key: deafening-gnarly-dining' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+curl -s http://localhost:8080/mcp -H 'X-Api-Key: your-mcp-token' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
 Expect `401 {"error":"Unauthorized",...}` + `WWW-Authenticate: Bearer` if token missing/invalid — Claude uses this to prompt for credentials.
@@ -189,7 +189,7 @@ gcloud run deploy yes-chef-cookbook \
   --region=europe-west1 \
   --allow-unauthenticated \
   --max-instances=5 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,RECIPES_COLLECTION=deafening-gnarly-dining \
+  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token \
   --port=8080
 ```
 
@@ -202,24 +202,24 @@ gcloud run deploy yes-chef-cookbook \
   --region=europe-west1 \
   --allow-unauthenticated \
   --max-instances=5 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,RECIPES_COLLECTION=deafening-gnarly-dining
+  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token
 ```
 
 ### Update env vars (e.g. change collection)
 
-Collection names must not contain `/` — use `deafening-gnarly-dining`, not `/deafening-gnarly-dining`.
+Collection names must not contain `/` — use `your-mcp-token`, not `/your-mcp-token`.
 
 ```bash
 # merge one var
 gcloud run services update yes-chef-cookbook \
   --region=europe-west1 \
-  --update-env-vars=RECIPES_COLLECTION=deafening-gnarly-dining
+  --update-env-vars=MCP_TOKEN=your-mcp-token
 
 # or reset both
 gcloud run deploy yes-chef-cookbook \
   --source . \
   --region=europe-west1 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,RECIPES_COLLECTION=deafening-gnarly-dining
+  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token
 ```
 
 ### Get the MCP URL
@@ -235,7 +235,7 @@ gcloud run services describe yes-chef-cookbook --region=europe-west1 --format='v
 
 ```bash
 docker build -t yes-chef-mcp .
-docker run -p 8080:8080 -e FIREBASE_PROJECT_ID=yes-chef-cookbook -e RECIPES_COLLECTION=deafening-gnarly-dining yes-chef-mcp
+docker run -p 8080:8080 -e FIREBASE_PROJECT_ID=yes-chef-cookbook -e MCP_TOKEN=your-mcp-token yes-chef-mcp
 # alternate with explicit Dockerfile:
 docker build -f mcp-server/Dockerfile -t yes-chef-mcp .
 ```

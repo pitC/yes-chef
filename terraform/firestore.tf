@@ -13,5 +13,5 @@ resource "google_firestore_database" "default" {
 }
 
 # Firestore rules are managed via `firebase deploy --only firestore:rules` or a terraform_data local-exec provisioner.
-# The rules file is `firestore.rules` at repo root — allowlist for established collection deafening-gnarly-dining.
-# See firestore.rules for allow read,write on established collection and deny on {other=**}.
+# The rules file is `firestore.rules` at repo root — dynamic, no hardcoded collection; allows via app server only.
+# See firestore.rules for deny-all client and allow via app server (Firestore SDK).

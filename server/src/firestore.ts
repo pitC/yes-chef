@@ -1,56 +1,154 @@
-import admin from "firebase-admin";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import {
+  getFirestore,
+  Firestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  DocumentReference,
+  CollectionReference,
+} from "firebase/firestore";
 
-let _db: FirebaseFirestore.Firestore | null = null;
-let _initialized = false;
+let _app: FirebaseApp | null = null;
+let _db: Firestore | null = null;
+let cachedCollection: string | null = null;
+let discoveryPromise: Promise<string | null> | null = null;
 
-const ESTABLISHED_COLLECTION = "deafening-gnarly-dining";
-
-function initAdmin(): void {
-  if (_initialized) return;
+function getFirebaseConfig() {
+  // Try JSON env first (Secret Manager)
+  const json = process.env.FIREBASE_CONFIG_JSON || process.env.FIREBASE_CONFIG || "";
+  if (json) {
+    try {
+      const parsed = JSON.parse(json);
+      if (parsed.apiKey && parsed.projectId) return parsed;
+    } catch {}
+  }
+  // Fallback to individual env vars or default config (not hardcoded collection)
+  const apiKey = process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY || "";
   const projectId =
     process.env.FIREBASE_PROJECT_ID ||
     process.env.GCLOUD_PROJECT ||
     process.env.GOOGLE_CLOUD_PROJECT ||
-    "demo-yes-chef";
+    "yes-chef-cookbook";
+  // For local dev, allow fake key if not set — Firestore SDK will still work with rules allow read
+  return {
+    apiKey: apiKey || "AIzaSyFakeKey_ForLocalDev_NotCommitted_12345",
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
+    projectId,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "158345618336",
+    appId: process.env.FIREBASE_APP_ID || "1:158345618336:web:5846633ae0d4d529c13ac5",
+  };
+}
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      projectId,
-    });
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      // eslint-disable-next-line no-console
-      console.log(`[firestore] Using emulator ${process.env.FIRESTORE_EMULATOR_HOST} project=${projectId}`);
-    } else {
-      // eslint-disable-next-line no-console
-      console.log(`[firestore] Initialized project=${projectId} collection=${ESTABLISHED_COLLECTION}`);
-    }
+function initFirestore(): void {
+  if (_db) return;
+  const config = getFirebaseConfig();
+  if (!getApps().length) {
+    _app = initializeApp(config);
+  } else {
+    _app = getApps()[0]!;
   }
-  _initialized = true;
-}
-
-export function getDb(): FirebaseFirestore.Firestore {
-  initAdmin();
-  if (!_db) {
-    _db = admin.firestore();
+  _db = getFirestore(_app);
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    // eslint-disable-next-line no-console
+    console.log(`[firestore] Using emulator ${process.env.FIRESTORE_EMULATOR_HOST} project=${config.projectId}`);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(`[firestore] Initialized project=${config.projectId} via Firestore SDK`);
   }
-  return _db;
 }
 
-export function getCollectionName(): string {
-  // Established collection — no longer env-driven (RECIPES_COLLECTION removed)
-  return ESTABLISHED_COLLECTION;
+export function getDb(): Firestore {
+  initFirestore();
+  return _db!;
 }
 
-export function getEstablishedCollectionName(): string {
-  return ESTABLISHED_COLLECTION;
+export function getFirestoreConfig() {
+  return getFirebaseConfig();
+}
+
+async function discoverCollection(): Promise<string | null> {
+  if (cachedCollection) return cachedCollection;
+  if (discoveryPromise) return discoveryPromise;
+
+  discoveryPromise = (async () => {
+    const db = getDb();
+    // 1) Try config/collections doc — established collection is stored in Firestore itself
+    try {
+      const snap = await getDoc(doc(db, "config", "collections"));
+      if (snap.exists()) {
+        const data = snap.data() as Record<string, unknown> | undefined;
+        const name =
+          (data?.established as string) ||
+          (data?.collection as string) ||
+          (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
+        if (name && typeof name === "string" && name.trim() && !name.includes("/")) {
+          cachedCollection = name.trim();
+          return cachedCollection;
+        }
+      }
+    } catch {}
+
+    // 2) Fallback: Firestore REST listCollectionIds — truly dynamic, no hardcoding
+    try {
+      const config = getFirebaseConfig();
+      const projectId = config.projectId;
+      const apiKey = config.apiKey;
+      if (projectId && apiKey) {
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:listCollectionIds?key=${apiKey}`;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pageSize: 20 }),
+        });
+        if (resp.ok) {
+          const json = (await resp.json()) as { collectionIds?: string[] };
+          const ids = json.collectionIds || [];
+          const candidate = ids.find((id) => id !== "config" && typeof id === "string" && id.trim());
+          if (candidate) {
+            cachedCollection = candidate;
+            return cachedCollection;
+          }
+          if (ids.length > 0) {
+            cachedCollection = ids[0];
+            return cachedCollection;
+          }
+        }
+      }
+    } catch {}
+
+    return null;
+  })();
+
+  const result = await discoveryPromise;
+  discoveryPromise = null;
+  return result;
+}
+
+export async function getCollectionName(): Promise<string | null> {
+  return discoverCollection();
+}
+
+export async function getEstablishedCollectionName(): Promise<string | null> {
+  return discoverCollection();
+}
+
+export function _setCachedCollectionForTests(name: string | null): void {
+  cachedCollection = name;
+}
+
+export function _clearCachedCollectionForTests(): void {
+  cachedCollection = null;
+  discoveryPromise = null;
 }
 
 /** Token for HTTP auth — backed by MCP_TOKEN (Secret Manager), not collection name */
 export function getAuthToken(): string {
   const token = (process.env.MCP_TOKEN || process.env.MCP_AUTH_TOKEN || "").trim();
   if (token) return token;
-  // Fallback for local dev / tests when MCP_NO_AUTH not set but no token configured
-  // In production, MCP_NO_AUTH should be unset and MCP_TOKEN must be set
   return "";
 }
 
@@ -58,9 +156,21 @@ export function isAuthDisabled(): boolean {
   return process.env.MCP_NO_AUTH === "1" || process.env.MCP_NO_AUTH === "true" || process.env.MCP_AUTH_DISABLED === "1" || process.env.MCP_AUTH_DISABLED === "true";
 }
 
-export function getCollection(): FirebaseFirestore.CollectionReference {
-  return getDb().collection(getCollectionName());
+export async function getCollection(): Promise<CollectionReference> {
+  const name = await discoverCollection();
+  if (!name) throw new Error("No established collection found — check Firestore config/collections or ensure a collection exists");
+  return collection(getDb(), name);
 }
+
+// Sync helper for callers that need a collection without awaiting discovery (uses cached or throws)
+export function getCollectionSync(): CollectionReference {
+  if (!cachedCollection) throw new Error("Collection not yet discovered — call getCollection() first or set via _setCachedCollectionForTests");
+  return collection(getDb(), cachedCollection);
+}
+
+// Re-export Firestore helpers for callers that need them (server uses Firestore SDK, not Admin SDK)
+export { collection, doc, getDoc, getDocs, setDoc, getFirestore, initializeApp };
+export type { CollectionReference, DocumentReference, Firestore };
 
 export function slugify(title: string): string {
   return title

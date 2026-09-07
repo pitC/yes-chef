@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getCollection, generateId, nowIso, slugify } from "./firestore.js";
+import { getCollection, generateId, nowIso, slugify, doc, getDoc, getDocs, setDoc } from "./firestore.js";
 import { assertValidRecipe } from "./validation.js";
 
 // Zod schemas for ingredients/steps mirror schema.json closed enums
@@ -127,14 +127,14 @@ export function createMcpServer(): McpServer {
           return { content: [{ type: "text", text: `Validation failed: ${msg}` }], isError: true };
         }
 
-        const col = getCollection();
-        const existing = await col.doc(docId).get();
-        if (existing.exists) {
+        const col = await getCollection();
+        const existing = await getDoc(doc(col, docId));
+        if (existing.exists()) {
           docId = `${docId}-${Math.random().toString(36).slice(2, 6)}`;
           candidate = { ...candidate, id: docId };
         }
 
-        await col.doc(docId).set(candidate);
+        await setDoc(doc(col, docId), candidate as Record<string, unknown>);
         return {
           content: [{ type: "text", text: JSON.stringify({ id: docId, ...candidate }, null, 2) }],
         };
@@ -184,10 +184,10 @@ export function createMcpServer(): McpServer {
     },
     async ({ id, updates, recipe }) => {
       try {
-        const col = getCollection();
-        const ref = col.doc(id);
-        const snap = await ref.get();
-        if (!snap.exists) {
+        const col = await getCollection();
+        const ref = doc(col, id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
           return { content: [{ type: "text", text: `Not found: no recipe with id "${id}"` }], isError: true };
         }
         const existing = snap.data() as Record<string, unknown>;
@@ -220,7 +220,7 @@ export function createMcpServer(): McpServer {
           return { content: [{ type: "text", text: `Validation failed: ${msg}` }], isError: true };
         }
 
-        await ref.set(merged, { merge: false });
+        await setDoc(ref, merged as Record<string, unknown>);
         return { content: [{ type: "text", text: JSON.stringify(merged, null, 2) }] };
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -249,8 +249,8 @@ export function createMcpServer(): McpServer {
     },
     async ({ keyword, limit, field }) => {
       try {
-        const col = getCollection();
-        const snap = await col.get();
+        const col = await getCollection();
+        const snap = await getDocs(col);
       const q = keyword.toLowerCase();
       const scope = field ?? "all";
       const max = limit ?? 20;
