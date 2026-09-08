@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { randomBytes, createHash } from "node:crypto";
-import { getAuthToken, getDb, collection, doc, getDoc } from "./firestore.js";
 import { isCollectionEstablished as isCollectionEstablishedFromFirestore } from "./firestore.js";
 
 // In-memory stores — suitable for single-instance Cloud Run; for multi-instance use Firestore with TTL
@@ -84,13 +83,9 @@ export function isValidOAuthToken(token: string): boolean {
   if (!token) return false;
   if (accessTokens.has(token)) return true;
   if (refreshTokens.has(token)) return true;
-  // Stateless fallback: MCP_TOKEN itself (survives restarts) — legacy single-tenant
-  const expected = getAuthToken();
-  if (expected && token === expected) return true;
   return false;
 }
 
-// Async variant for multi-tenant: checks OAuth maps, legacy token, and whether token IS a valid collection (stateless)
 export async function isValidOAuthTokenAsync(token: string): Promise<boolean> {
   if (isValidOAuthToken(token)) return true;
   const col = await resolveCollectionForToken(token);
@@ -101,30 +96,8 @@ export async function resolveCollectionForToken(token: string): Promise<string |
   if (!token) return null;
   const trimmed = token.trim().replace(/^\/+/, "");
   if (!trimmed || trimmed.includes("/")) return null;
-  // 1) OAuth issued token (random or collection-based) — map lookup
   const at = accessTokens.get(trimmed) || refreshTokens.get(trimmed);
   if (at) return at.collection;
-  // 2) Legacy MCP_TOKEN — resolve to discovered collection via config/collections or treat as collection if valid
-  const legacy = getAuthToken();
-  if (legacy && trimmed === legacy) {
-    // Try to discover legacy collection; if discovery fails, treat token itself as collection only if valid
-    try {
-      const db = getDb();
-      const snap = await getDoc(doc(db, "config", "collections"));
-      if (snap.exists()) {
-        const data = snap.data() as Record<string, unknown> | undefined;
-        const name =
-          (data?.established as string) ||
-          (data?.collection as string) ||
-          (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
-        if (name && typeof name === "string" && name.trim() && !name.includes("/")) return name.trim();
-      }
-    } catch {}
-    // Fallback: check if token itself is a valid collection
-    if (await isCollectionEstablishedFromFirestore(trimmed)) return trimmed;
-    return null;
-  }
-  // 3) Direct collection code — check Firestore (stateless, survives restarts)
   if (await isCollectionEstablishedFromFirestore(trimmed)) return trimmed;
   return null;
 }
@@ -276,30 +249,11 @@ export async function handleAuthorizePost(req: Request, res: Response): Promise<
     return;
   }
 
-  // Multi-tenant: validate against Firestore collection existence (any established cookbook).
-  // Also support legacy MCP_TOKEN for backward compat.
   let resolvedCollection: string | null = null;
   if (tokenInput) {
     const cleaned = tokenInput.trim().replace(/^\/+/, "");
     if (cleaned && !cleaned.includes("/")) {
-      const legacy = getAuthToken();
-      if (legacy && cleaned === legacy) {
-        // Legacy token — resolve to discovered collection if possible
-        try {
-          const db = getDb();
-          const snap = await getDoc(doc(db, "config", "collections"));
-          if (snap.exists()) {
-            const data = snap.data() as Record<string, unknown> | undefined;
-            const name =
-              (data?.established as string) ||
-              (data?.collection as string) ||
-              (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
-            if (name && typeof name === "string" && name.trim() && !name.includes("/")) resolvedCollection = name.trim();
-          }
-        } catch {}
-        if (!resolvedCollection && (await isCollectionEstablishedFromFirestore(cleaned))) resolvedCollection = cleaned;
-        if (!resolvedCollection) resolvedCollection = cleaned; // allow legacy even without Firestore check (emulator)
-      } else if (await isCollectionEstablishedFromFirestore(cleaned)) {
+      if (await isCollectionEstablishedFromFirestore(cleaned)) {
         resolvedCollection = cleaned;
       }
     }
@@ -491,28 +445,11 @@ export async function handleToken(req: Request, res: Response): Promise<void> {
       return;
     }
     let entry = refreshTokens.get(refreshToken);
-    // Stateless fallback: if refreshToken itself is a valid collection, allow (survives restart)
     let statelessCollection: string | null = null;
     if (!entry) {
       const cleaned = refreshToken.trim().replace(/^\/+/, "");
       if (cleaned && !cleaned.includes("/")) {
-        const legacy = getAuthToken();
-        if (legacy && cleaned === legacy) {
-          try {
-            const db = getDb();
-            const snap = await getDoc(doc(db, "config", "collections"));
-            if (snap.exists()) {
-              const data = snap.data() as Record<string, unknown> | undefined;
-              const name =
-                (data?.established as string) ||
-                (data?.collection as string) ||
-                (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
-              if (name && typeof name === "string" && name.trim() && !name.includes("/")) statelessCollection = name.trim();
-            }
-          } catch {}
-          if (!statelessCollection && (await isCollectionEstablishedFromFirestore(cleaned))) statelessCollection = cleaned;
-          if (!statelessCollection) statelessCollection = cleaned;
-        } else if (await isCollectionEstablishedFromFirestore(cleaned)) {
+        if (await isCollectionEstablishedFromFirestore(cleaned)) {
           statelessCollection = cleaned;
         }
       }

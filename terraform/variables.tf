@@ -40,13 +40,6 @@ variable "budget_amount" {
   default     = 10
 }
 
-variable "mcp_token" {
-  description = "Shared secret for MCP Bearer auth (Secret Manager mcp-token). Empty = no auth in TF; use Secret Manager."
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
 variable "firebase_config_json" {
   description = "JSON string for firebaseConfig (apiKey etc.) — stored in Secret Manager, not committed"
   type        = string

@@ -13,8 +13,6 @@ import {
 
 let _app: FirebaseApp | null = null;
 let _db: Firestore | null = null;
-let cachedCollection: string | null = null;
-let discoveryPromise: Promise<string | null> | null = null;
 
 function getFirebaseConfig() {
   // Try JSON env first (Secret Manager)
@@ -70,53 +68,6 @@ export function getFirestoreConfig() {
   return getFirebaseConfig();
 }
 
-async function discoverCollection(): Promise<string | null> {
-  if (cachedCollection) return cachedCollection;
-  if (discoveryPromise) return discoveryPromise;
-
-  discoveryPromise = (async () => {
-    const db = getDb();
-    // Only source of truth is config/collections doc — no listCollectionIds (never disclose all IDs)
-    try {
-      const snap = await getDoc(doc(db, "config", "collections"));
-      if (snap.exists()) {
-        const data = snap.data() as Record<string, unknown> | undefined;
-        const name =
-          (data?.established as string) ||
-          (data?.collection as string) ||
-          (Array.isArray(data?.collections) && (data?.collections as string[])[0]);
-        if (name && typeof name === "string" && name.trim() && !name.includes("/")) {
-          cachedCollection = name.trim();
-          return cachedCollection;
-        }
-      }
-    } catch {}
-
-    return null;
-  })();
-
-  const result = await discoveryPromise;
-  discoveryPromise = null;
-  return result;
-}
-
-export async function getCollectionName(): Promise<string | null> {
-  return discoverCollection();
-}
-
-export async function getEstablishedCollectionName(): Promise<string | null> {
-  return discoverCollection();
-}
-
-export function _setCachedCollectionForTests(name: string | null): void {
-  cachedCollection = name;
-}
-
-export function _clearCachedCollectionForTests(): void {
-  cachedCollection = null;
-  discoveryPromise = null;
-}
-
 /** Check if a Firestore collection is established (has metadata doc) — used for multi-tenant auth */
 export async function isCollectionEstablished(collectionName: string): Promise<boolean> {
   if (!collectionName || !collectionName.trim() || collectionName.includes("/")) return false;
@@ -129,13 +80,6 @@ export async function isCollectionEstablished(collectionName: string): Promise<b
   }
 }
 
-/** Legacy single-tenant token — backed by MCP_TOKEN (Secret Manager). Kept for backward compat; multi-tenant prefers collection codes. */
-export function getAuthToken(): string {
-  const token = (process.env.MCP_TOKEN || process.env.MCP_AUTH_TOKEN || "").trim();
-  if (token) return token;
-  return "";
-}
-
 export function isAuthDisabled(): boolean {
   return process.env.MCP_NO_AUTH === "1" || process.env.MCP_NO_AUTH === "true" || process.env.MCP_AUTH_DISABLED === "1" || process.env.MCP_AUTH_DISABLED === "true";
 }
@@ -146,18 +90,6 @@ export async function resolveCollectionFromToken(token: string): Promise<string 
   if (!cleaned || cleaned.includes("/")) return null;
   if (await isCollectionEstablished(cleaned)) return cleaned;
   return null;
-}
-
-export async function getCollection(): Promise<CollectionReference> {
-  const name = await discoverCollection();
-  if (!name) throw new Error("No established collection found — check Firestore config/collections or ensure a collection exists");
-  return collection(getDb(), name);
-}
-
-// Sync helper for callers that need a collection without awaiting discovery (uses cached or throws)
-export function getCollectionSync(): CollectionReference {
-  if (!cachedCollection) throw new Error("Collection not yet discovered — call getCollection() first or set via _setCachedCollectionForTests");
-  return collection(getDb(), cachedCollection);
 }
 
 // Re-export Firestore helpers for callers that need them (server uses Firestore SDK, not Admin SDK)

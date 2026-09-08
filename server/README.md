@@ -4,7 +4,7 @@ Node.js MCP server exposing three tools over **Streamable HTTP** (Cloud Run) and
 
 | Tool | Purpose |
 |---|---|
-| `create_recipe` | Create a new recipe from scratch — validates against `schema.json`, generates `id` + timestamps, writes to Firestore `recipes` collection |
+| `create_recipe` | Create a new recipe from scratch — validates against `schema.json`, generates `id` + timestamps, writes to Firestore collection |
 | `update_recipe` | Update an existing recipe by `id` — merges `updates`/`recipe`, re-validates, bumps `updatedAt` |
 | `search_recipes` | Keyword search over `title`, `tags`, and `steps[].text`/`steps[].title` (case-insensitive substring, in-memory after `collection.get()`) |
 
@@ -13,12 +13,12 @@ Validation uses `Ajv` + `ajv-formats` compiled directly from the repo-root `sche
 ## Quick start (local)
 
 ```bash
-cd mcp-server
+cd server
 npm install
 cp .env.example .env   # set FIREBASE_PROJECT_ID etc.
 npm run dev            # http on :8080
 # or stdio mode:
-npm run dev:stdio
+COOKBOOK_CODE=my-cookbook npm run dev:stdio
 ```
 
 Env:
@@ -26,30 +26,30 @@ Env:
 ```
 FIREBASE_PROJECT_ID=yes-chef-cookbook
 GOOGLE_APPLICATION_CREDENTIALS=./service-account.json # local only, not in Cloud Run
-MCP_TOKEN=your-mcp-token            # Bearer token for MCP HTTP auth (Secret Manager mcp-token)
 PORT=8080
 FIRESTORE_EMULATOR_HOST=localhost:8080 # optional
 MCP_NO_AUTH=1                          # optional: disable auth locally (emulator)
-# Clients must send: Authorization: Bearer <MCP_TOKEN>
+COOKBOOK_CODE=my-cookbook               # required for stdio transport only
+# Clients must send: Authorization: Bearer <cookbook-code>
 ```
 
 Local Firestore emulator:
 
 ```bash
 firebase emulators:start --only firestore
-FIRESTORE_EMULATOR_HOST=localhost:8080 npm run dev
+FIRESTORE_EMULATOR_HOST=localhost:8080 MCP_NO_AUTH=1 npm run dev
 ```
 
 ## Authentication (Claude-compatible)
 
-All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `MCP_TOKEN`** (the Firestore collection key), normalized without leading `/`.
+All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = cookbook code** (the Firestore collection name), normalized without leading `/`.
 
 - Health checks (`/` and `/health`) are **unauthenticated** (required for Cloud Run).
-- `stdio` transport bypasses HTTP auth.
-- Accepted: `Authorization: Bearer <MCP_TOKEN>` (primary, Claude-compatible), also `X-Api-Key: <token>`, `X-Collection-Key: <token>`, or `?token=<token>` query param.
+- `stdio` transport uses `COOKBOOK_CODE` env (no HTTP auth).
+- Accepted: `Authorization: Bearer <cookbook-code>` (primary, Claude-compatible), also `X-Api-Key: <token>`, `X-Collection-Key: <token>`, or `?token=<token>` query param.
 - Invalid/missing token → `401 Unauthorized` + `WWW-Authenticate: Bearer realm="yes-chef-mcp"` (so Claude surfaces auth error).
 - To disable auth locally (emulator): `MCP_NO_AUTH=1` or `MCP_AUTH_DISABLED=1`.
-- Collection example: `MCP_TOKEN=your-mcp-token` → token `your-mcp-token` (also accepts `/your-mcp-token`).
+- Collection example: `Authorization: Bearer my-cookbook` where `my-cookbook` is a Firestore collection containing a `metadata` doc.
 
 ### Claude configuration
 
@@ -62,7 +62,7 @@ All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `MCP_T
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://<cloud-run-url>/mcp"],
       "headers": {
-        "Authorization": "Bearer your-mcp-token"
+        "Authorization": "Bearer my-cookbook"
       }
     }
   }
@@ -72,15 +72,15 @@ All MCP HTTP endpoints (`/mcp`, `/sse`) require a Bearer token. **Token = `MCP_T
 Or with direct Streamable HTTP (Claude 2026+ remote MCP):
 
 - URL: `https://<cloud-run-url>/mcp`
-- Header: `Authorization: Bearer your-mcp-token`
+- Header: `Authorization: Bearer my-cookbook`
 
-**claude.ai custom connector**: Add server URL `https://<cloud-run-url>/mcp` and set header `Authorization: Bearer <MCP_TOKEN>`.
+**claude.ai custom connector**: Add server URL `https://<cloud-run-url>/mcp` and set header `Authorization: Bearer <cookbook-code>`.
 
 ## MCP endpoints (HTTP)
 
 - `POST /mcp` — primary Streamable HTTP endpoint (stateless, per-request `McpServer` instance) — **requires Bearer auth**
 - `GET  /mcp` — SSE fallback for clients that negotiate via GET — **requires Bearer auth**
-- `POST /sse` / `GET /sse` — legacy SSE alias — **requires Bearer auth**
+- `POST /sse` / `GET /sse` — SSE alias — **requires Bearer auth**
 - `GET  /` / `GET /health` — health checks for Cloud Run — **unauthenticated**
 
 `POST /mcp` expects JSON-RPC with `tools/call` etc. Example with `curl` (after starting server):
@@ -89,17 +89,17 @@ Or with direct Streamable HTTP (Claude 2026+ remote MCP):
 # Health (no auth)
 curl -s http://localhost:8080/health
 
-# MCP (auth required) — use MCP_TOKEN as token
+# MCP (auth required) — use cookbook code as token
 curl -s http://localhost:8080/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  -H 'Authorization: Bearer your-mcp-token' \
+  -H 'Authorization: Bearer my-cookbook' \
   -d '{
     "jsonrpc":"2.0","id":1,"method":"tools/list","params":{}
   }'
 
 # Alternative header
-curl -s http://localhost:8080/mcp -H 'X-Api-Key: your-mcp-token' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+curl -s http://localhost:8080/mcp -H 'X-Api-Key: my-cookbook' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
 Expect `401 {"error":"Unauthorized",...}` + `WWW-Authenticate: Bearer` if token missing/invalid — Claude uses this to prompt for credentials.
@@ -179,17 +179,17 @@ gcloud services enable run.googleapis.com firestore.googleapis.com cloudbuild.go
 
 ### Deploy (from repo root — `Dockerfile` at root is auto-detected)
 
-> `Dockerfile` at repo root and `mcp-server/Dockerfile` are identical copies. `gcloud` < ~490 has no `--dockerfile` flag, so deploy **from repo root** with `--source .`. Do **not** run from `mcp-server/`.
+> `Dockerfile` at repo root and `server/Dockerfile` are identical copies. `gcloud` < ~490 has no `--dockerfile` flag, so deploy **from repo root** with `--source .`. Do **not** run from `server/`.
 
 ```bash
-cd /Users/piotrek/Workspaces/yes-chef-recipes  # repo root
+cd /Users/piotrek/Workspaces/yes-chef  # repo root
 
 gcloud run deploy yes-chef-cookbook \
   --source . \
   --region=europe-west1 \
   --allow-unauthenticated \
-  --max-instances=5 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token \
+  --max-instances=1 \
+  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook \
   --port=8080
 ```
 
@@ -198,28 +198,11 @@ If you update `gcloud` (`gcloud components update`), the flag works:
 ```bash
 gcloud run deploy yes-chef-cookbook \
   --source . \
-  --dockerfile=mcp-server/Dockerfile \
+  --dockerfile=server/Dockerfile \
   --region=europe-west1 \
   --allow-unauthenticated \
-  --max-instances=5 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token
-```
-
-### Update env vars (e.g. change collection)
-
-Collection names must not contain `/` — use `your-mcp-token`, not `/your-mcp-token`.
-
-```bash
-# merge one var
-gcloud run services update yes-chef-cookbook \
-  --region=europe-west1 \
-  --update-env-vars=MCP_TOKEN=your-mcp-token
-
-# or reset both
-gcloud run deploy yes-chef-cookbook \
-  --source . \
-  --region=europe-west1 \
-  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook,MCP_TOKEN=your-mcp-token
+  --max-instances=1 \
+  --set-env-vars=FIREBASE_PROJECT_ID=yes-chef-cookbook
 ```
 
 ### Get the MCP URL
@@ -235,9 +218,9 @@ gcloud run services describe yes-chef-cookbook --region=europe-west1 --format='v
 
 ```bash
 docker build -t yes-chef-mcp .
-docker run -p 8080:8080 -e FIREBASE_PROJECT_ID=yes-chef-cookbook -e MCP_TOKEN=your-mcp-token yes-chef-mcp
+docker run -p 8080:8080 -e FIREBASE_PROJECT_ID=yes-chef-cookbook yes-chef-mcp
 # alternate with explicit Dockerfile:
-docker build -f mcp-server/Dockerfile -t yes-chef-mcp .
+docker build -f server/Dockerfile -t yes-chef-mcp .
 ```
 
 ### Service account
@@ -261,11 +244,11 @@ ADC is used in Cloud Run — no `GOOGLE_APPLICATION_CREDENTIALS` needed.
 ## Project layout
 
 ```
-mcp-server/
+server/
   src/
     index.ts       # Express + MCP wiring (stdio + HTTP)
     mcp.ts         # create/update/search tool definitions
-    firestore.ts   # Admin SDK init + helpers
+    firestore.ts   # Firestore SDK init + helpers
     validation.ts  # Ajv compiled from schema.json
   Dockerfile
   package.json

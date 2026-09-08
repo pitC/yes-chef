@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { collection, getDb, getCollection, generateId, nowIso, slugify, doc, getDoc, getDocs, setDoc } from "./firestore.js";
+import { collection, getDb, generateId, nowIso, slugify, doc, getDoc, getDocs, setDoc } from "./firestore.js";
 import { assertValidRecipe } from "./validation.js";
 
 // Zod schemas for ingredients/steps mirror schema.json closed enums
@@ -83,17 +83,17 @@ function normalizeRecipeForValidation(input: Record<string, unknown>): Record<st
   };
 }
 
-export function createMcpServer(collectionName?: string): McpServer {
+export function createMcpServer(collectionName: string): McpServer {
   const server = new McpServer({
     name: "yes-chef-recipes",
     version: "0.1.0",
   });
 
-  // Resolve collection per-request (multi-tenant) or fall back to discovery (legacy/stdio)
-  const getColForRequest = async () => {
-    if (collectionName) return collection(getDb(), collectionName);
-    return getCollection();
-  };
+  if (!collectionName || !collectionName.trim() || collectionName.includes("/")) {
+    throw new Error("collectionName is required — provide cookbook code as Bearer token");
+  }
+
+  const getColForRequest = async () => collection(getDb(), collectionName);
 
   // ── create_recipe ──────────────────────────────────────────────
   server.tool(

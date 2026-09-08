@@ -18,8 +18,7 @@ resource "google_project_iam_member" "run_secret_accessor" {
   member  = "serviceAccount:${google_service_account.run.email}"
 }
 
-# MCP auth token is stored in Secret Manager (mcp-token) — not as RECIPES_COLLECTION
-# No RECIPES_COLLECTION env var — collection discovery is Firestore-driven
+# No MCP_TOKEN / RECIPES_COLLECTION env vars — auth is per-request cookbook code (collection/metadata)
 
 resource "google_cloud_run_v2_service" "yes_chef" {
   name     = var.run_service_name
@@ -64,15 +63,6 @@ resource "google_cloud_run_v2_service" "yes_chef" {
         value = var.run_service_name
       }
 
-      # MCP auth token via env or secret — prefer secret reference if mcp_token provided
-      dynamic "env" {
-        for_each = var.mcp_token != "" ? [1] : []
-        content {
-          name  = "MCP_TOKEN"
-          value = var.mcp_token
-        }
-      }
-
       startup_probe {
         tcp_socket {
           port = 8080
@@ -96,7 +86,7 @@ resource "google_cloud_run_v2_service" "yes_chef" {
     service_account = google_service_account.run.email
   }
 
-  # Allow unauthenticated — health checks and MCP auth is app-level (requireMcpAuth via MCP_TOKEN)
+  # Allow unauthenticated — health checks and MCP auth is app-level (requireMcpAuth via cookbook code)
   depends_on = [google_project_service.services]
 
   lifecycle {
@@ -107,7 +97,7 @@ resource "google_cloud_run_v2_service" "yes_chef" {
   }
 }
 
-# Allow public invoker for health checks / MCP (app-level auth still enforced)
+# Allow public invoker for health checks / MCP (app-level per-cookbook auth still enforced)
 resource "google_cloud_run_service_iam_member" "public_invoker" {
   location = google_cloud_run_v2_service.yes_chef.location
   project  = google_cloud_run_v2_service.yes_chef.project
