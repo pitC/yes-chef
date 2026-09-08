@@ -6,6 +6,7 @@ import { renderTimerTray } from '../components/timer-tray.js';
 import { timerManager } from '../timers/manager.js';
 import { scheduleNotification } from '../timers/sw-messaging.js';
 import { scaleIngredients, formatAmount } from '../utils/scaling.js';
+import { requestWakeLock, releaseWakeLock, isWakeLockSupported, isWakeLockActive } from '../wake-lock.js';
 
 export const doneSteps = signal(new Set());
 export const activeStepId = signal(null);
@@ -111,6 +112,35 @@ export async function renderCookingView(params, container) {
   loadPrepDone();
 
   const cleanups = [];
+
+  // Keep screen awake while cooking — auto re-acquires on visibilitychange.
+  // Initial request may fail if not in a user gesture (some Android builds gate it),
+  // so also retry on first interaction inside cooking mode.
+  let wakeLockRetryHandler = null;
+  let wakeLockChangeHandler = null;
+  let wakeLockPoll = null;
+
+  const tryWakeLock = () => {
+    if (isWakeLockSupported() && !isWakeLockActive()) void requestWakeLock();
+  };
+  void requestWakeLock();
+
+  if (isWakeLockSupported()) {
+    // Retry on first click/touch within cooking mode (counts as user gesture)
+    wakeLockRetryHandler = () => tryWakeLock();
+    document.addEventListener('click', wakeLockRetryHandler, { once: true });
+    document.addEventListener('touchend', wakeLockRetryHandler, { once: true });
+    cleanups.push(() => {
+      if (wakeLockRetryHandler) {
+        document.removeEventListener('click', wakeLockRetryHandler);
+        document.removeEventListener('touchend', wakeLockRetryHandler);
+      }
+    });
+  }
+
+  cleanups.push(() => {
+    void releaseWakeLock();
+  });
   
   function render() {
     const stored = sessionStorage.getItem(`servings_${recipe.id}`);
@@ -121,7 +151,8 @@ export async function renderCookingView(params, container) {
       <div class="cooking-mode">
         <header class="cooking-mode__header">
           <button class="exit-cooking-btn btn btn--ghost" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
-          <h1 title="${recipe.title.replace(/"/g, '&quot;')}">${recipe.title}</h1>
+          <h1 title="${recipe.title.replace(/"/g, '&quot;')}" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${recipe.title}</h1>
+          <button class="wake-lock-btn btn btn--ghost" aria-label="Keep screen awake" title="Keep screen awake" style="flex-shrink:0; font-size:0.85rem; border:1px solid var(--color-border); white-space:nowrap;">${!isWakeLockSupported() ? '⚠️ Unsupported' : isWakeLockActive() ? '☀️ Awake' : '🌙 Keep awake'}</button>
         </header>
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
@@ -247,6 +278,56 @@ export async function renderCookingView(params, container) {
       prepDone.value = false;
       navigate(`/recipe/${recipe.id}`);
     });
+
+    // Wake-lock toggle — always visible for debug; disabled if unsupported
+    const wakeBtn = container.querySelector('.wake-lock-btn');
+    if (wakeBtn) {
+      const updateBtn = () => {
+        if (!isWakeLockSupported()) {
+          wakeBtn.textContent = '⚠️ Unsupported';
+          wakeBtn.style.opacity = '0.5';
+          wakeBtn.title = 'Wake Lock API not available in this browser/context';
+          wakeBtn.disabled = true;
+          return;
+        }
+        wakeBtn.disabled = false;
+        if (isWakeLockActive()) {
+          wakeBtn.textContent = '☀️ Awake';
+          wakeBtn.style.opacity = '1';
+          wakeBtn.title = 'Screen will stay awake — tap to release';
+        } else {
+          wakeBtn.textContent = '🌙 Keep awake';
+          wakeBtn.style.opacity = '0.7';
+          wakeBtn.title = 'Tap to keep screen awake while cooking';
+        }
+      };
+      updateBtn();
+      // debug: help diagnose why button might show unsupported
+      if (!isWakeLockSupported()) {
+        console.error(`[WakeLock] not supported — in navigator: ${'wakeLock' in navigator}, UA: ${navigator.userAgent}`);
+      }
+      wakeBtn.addEventListener('click', async () => {
+        if (!isWakeLockSupported()) return;
+        if (isWakeLockActive()) {
+          await releaseWakeLock();
+        } else {
+          const res = await requestWakeLock();
+          if (!res) {
+            console.error('[WakeLock] request returned null — check chrome://inspect for error');
+          }
+        }
+        updateBtn();
+      });
+      // keep button in sync when lock auto-releases / re-acquires (visibilitychange)
+      wakeLockChangeHandler = () => updateBtn();
+      document.addEventListener('wake-lock-change', wakeLockChangeHandler);
+      // poll fallback for release event (some browsers don't fire our custom event on release)
+      wakeLockPoll = setInterval(updateBtn, 1000);
+      cleanups.push(() => {
+        document.removeEventListener('wake-lock-change', wakeLockChangeHandler);
+        clearInterval(wakeLockPoll);
+      });
+    }
 
     const trayContainer = container.querySelector('.timer-tray-container');
     if (trayContainer) {
