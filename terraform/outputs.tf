@@ -1,13 +1,3 @@
-output "bucket_name" {
-  description = "GCS bucket for static hosting (Option A)"
-  value       = google_storage_bucket.static.name
-}
-
-output "bucket_url" {
-  description = "Public website URL (Option A)"
-  value       = "https://storage.googleapis.com/${google_storage_bucket.static.name}/index.html"
-}
-
 output "run_url" {
   description = "Cloud Run URL (preserved yes-chef-cookbook)"
   value       = google_cloud_run_v2_service.yes_chef.uri

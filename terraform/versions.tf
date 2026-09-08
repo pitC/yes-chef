@@ -12,11 +12,6 @@ terraform {
     }
   }
 
-  # Uncomment to use GCS backend after creating bucket:
-  # backend "gcs" {
-  #   bucket = "yes-chef-tfstate"
-  #   prefix = "terraform/state"
-  # }
 }
 
 provider "google" {

@@ -32,3 +32,4 @@ terraform/.budget-cap.zip
 # Public generated configs (prod)
 public/js/app-config.js
 public/js/firebase-config.js
+.firebase/

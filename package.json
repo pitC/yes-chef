@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "eslint public/js test",
     "test": "vitest run",
-    "prepare": "husky"
+    "prepare": "husky",
+    "deploy": "firebase deploy --only hosting --project yes-chef-cookbook",
+    "deploy:public": "firebase deploy --only hosting --project yes-chef-cookbook"
   },
   "license": "ISC",
   "type": "module",

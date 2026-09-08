@@ -11,7 +11,7 @@ variable "project_number" {
 }
 
 variable "region" {
-  description = "Default region for Cloud Run, buckets, functions"
+  description = "Default region for Cloud Run and functions"
   type        = string
   default     = "europe-west1"
 }
@@ -20,12 +20,6 @@ variable "firestore_location" {
   description = "Firestore location — must be nam5 per live database, not region"
   type        = string
   default     = "nam5"
-}
-
-variable "bucket_name" {
-  description = "GCS bucket for static hosting (Option A public website)"
-  type        = string
-  default     = "yes-chef-static-yes-chef-cookbook"
 }
 
 variable "run_service_name" {

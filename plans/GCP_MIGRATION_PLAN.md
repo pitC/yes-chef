@@ -1,5 +1,7 @@
 # GCP Full Migration Plan — Yes Chef
 
+> **DEPRECATED — Static hosting moved to Firebase Hosting:** This plan describes Option A (public GCS bucket website via `google_storage_bucket.static` + `gcloud storage rsync`). That approach is **no longer used**. Static PWA is now deployed via **Firebase Hosting** (`firebase.json:6` `hosting.public: "public"` + `firebase deploy --only hosting` / `make deploy`). `terraform/storage.tf` was removed. Keep `terraform/budget.tf`'s `google_storage_bucket.budget_cap_source` — it is for Cloud Functions source, not static hosting.
+
 > **Scope:** Host static PWA on Cloud Storage, route Firestore writes/reads via hardened rules + standard Firebase SDK (or proxied through the same Cloud Run that hosts the MCP server — no API keys committed), consolidate MCP server + budget-cap from `yes-chef-recipes` into `yes-chef`, and codify **all** infra in Terraform. Cloud Run is **max 1 instance**. Includes API-key invalidation/rotation procedure. `RECIPES_COLLECTION` is **removed** as an env var — collection discovery relies solely on what exists in Firestore. Recipe JSONs and `scripts/deploy-recipes.mjs` **stay** in `yes-chef-recipes` (not moved).
 
 **Source inventories inspected:** `yes-chef@1.0.3` (`firebase.js:3-9`, `js/firebase.js:1-9`, `js/firestore.js`, `js/data/recipes.js`, `firestore.rules`, `sw.js`, `index.html`) and `yes-chef-recipes` (`mcp-server/` with `src/index.ts`, `firestore.ts`, `mcp.ts`, `oauth.ts`, `validation.ts`, `Dockerfile`, `schema.json`, `scripts/deploy-recipes.mjs`, `scripts/budget-cap/index.js`).

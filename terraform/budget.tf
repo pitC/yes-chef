@@ -105,19 +105,19 @@ resource "google_cloudfunctions2_function" "budget_cap" {
   }
 
   service_config {
-    service_account_email            = "158345618336-compute@developer.gserviceaccount.com"
-    available_memory                 = "256M"
-    timeout_seconds                  = 60
-    max_instance_count               = 1
-    available_cpu                    = "0.166"
+    service_account_email = "158345618336-compute@developer.gserviceaccount.com"
+    available_memory      = "256M"
+    timeout_seconds       = 60
+    max_instance_count    = 1
+    available_cpu         = "0.166"
 
     environment_variables = {
-      GCP_PROJECT      = var.project_id
+      GCP_PROJECT          = var.project_id
       GOOGLE_CLOUD_PROJECT = var.project_id
-      REGION           = var.region
-      SERVICE          = var.run_service_name
-      DISABLE_BILLING  = "false"
-      LOG_EXECUTION_ID = "true"
+      REGION               = var.region
+      SERVICE              = var.run_service_name
+      DISABLE_BILLING      = "false"
+      LOG_EXECUTION_ID     = "true"
     }
   }
 
