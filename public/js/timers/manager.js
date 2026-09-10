@@ -14,8 +14,8 @@ function fireNotification(label, id) {
             if (reg.showNotification) {
               return reg.showNotification('Timer Complete', {
                 body,
-                icon: 'icons/icon-192.svg',
-                badge: 'icons/icon-192.svg',
+                icon: 'icons/icon-192.png',
+                badge: 'icons/icon-192.png',
                 tag: id,
                 requireInteraction: true,
               });

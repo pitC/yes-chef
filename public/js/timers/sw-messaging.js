@@ -49,8 +49,8 @@ export async function scheduleNotification(timerId, label, delayMs) {
           if (reg.showNotification) {
             await reg.showNotification('Timer Complete', {
               body: `${label} is ready!`,
-              icon: 'icons/icon-192.svg',
-              badge: 'icons/icon-192.svg',
+              icon: 'icons/icon-192.png',
+              badge: 'icons/icon-192.png',
               tag: timerId,
               requireInteraction: true,
             });

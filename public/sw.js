@@ -1,5 +1,5 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v26';
+const CACHE_NAME = 'yes-chef-v27';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -32,8 +32,8 @@ const STATIC_ASSETS = [
   'js/app-config.js',
   'js/firebase-config.js',
   'js/storage.js',
-  'icons/icon-192.svg',
-  'icons/icon-512.svg',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -101,8 +101,8 @@ self.addEventListener('message', (event) => {
     setTimeout(() => {
       self.registration.showNotification('Timer Complete', {
         body: `${label} is ready!`,
-        icon: 'icons/icon-192.svg',
-        badge: 'icons/icon-192.svg',
+        icon: 'icons/icon-192.png',
+        badge: 'icons/icon-192.png',
         tag: timerId,
         requireInteraction: true,
         actions: [
