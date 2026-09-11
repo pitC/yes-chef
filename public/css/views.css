@@ -741,7 +741,7 @@
 .cooking-step__grid .cooking-step__check {
   grid-area: check;
   align-self: start;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .cooking-step__grid .cooking-step__number {
   grid-area: number;
@@ -856,7 +856,7 @@
     align-items: start;
   }
   .cooking-step__grid .cooking-step__check {
-    margin-top: 2px;
+    margin-top: 4px;
   }
 }
 
