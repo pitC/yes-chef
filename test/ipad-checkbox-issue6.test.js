@@ -13,7 +13,7 @@ describe('issue #6: larger check buttons for iPad', () => {
     document.body.removeChild(container);
   });
 
-  it('step-done checkbox should be at least 44x44', () => {
+  it('step-done checkbox is compact on mobile (20px) not oversized', () => {
     const step = {
       id: 'step_1',
       order: 1,
@@ -24,37 +24,46 @@ describe('issue #6: larger check buttons for iPad', () => {
     renderCookingStep(step, [], { isDone: false, onToggleDone: vi.fn(), onStartTimer: vi.fn() }, container);
     const cb = container.querySelector('.step-done-checkbox');
     expect(cb).toBeTruthy();
-    // Check inline style or computed style width/height >=44
-    const width = cb.style.width || getComputedStyle(cb).width;
-    const height = cb.style.height || getComputedStyle(cb).height;
-    const w = parseInt(width, 10);
-    const h = parseInt(height, 10);
-    // Allow either inline 44px or CSS-driven 44px
-    expect(w).toBeGreaterThanOrEqual(44);
-    expect(h).toBeGreaterThanOrEqual(44);
+    // Mobile should be compact — inline must NOT be 44px (that would be too large on phone)
+    const inlineW = cb.style.width;
+    const inlineH = cb.style.height;
+    // No large inline size on mobile; CSS will handle responsive scaling
+    if (inlineW) expect(parseInt(inlineW, 10)).toBeLessThanOrEqual(24);
+    if (inlineH) expect(parseInt(inlineH, 10)).toBeLessThanOrEqual(24);
+    // Computed style on jsdom without media query should be base 20px (from CSS)
+    // Ensure we have class for styling
+    expect(cb.classList.contains('step-done-checkbox')).toBe(true);
   });
 
-  it('prep checkboxes should be at least 44x44 on iPad', async () => {
-    // Render cooking view prep check requires cooking.js, but we can test CSS file directly
+  it('CSS is responsive: base 20px on mobile, 44x44 on iPad via 768px media query', async () => {
     const cssPath = path.resolve('public/css/views.css');
     const css = fs.readFileSync(cssPath, 'utf8');
-    // Should contain 44px for checkboxes and media query or direct rule
     expect(css).toMatch(/44px/);
-    // Should have responsive / iPad consideration: either media query or min-width
-    const hasResponsive = css.includes('@media') && css.includes('44px');
-    const hasDirect44 = /\.step-done-checkbox[^}]*44px/.test(css) || /cooking-step__check[^}]*44px/.test(css) || css.includes('.prep-done-checkbox');
-    // At least one of these should be true after fix
-    expect(hasResponsive || hasDirect44 || css.match(/44px/g).length >= 2).toBeTruthy();
+    // Must have responsive media query for iPad
+    expect(css).toMatch(/@media\s*\(\s*min-width:\s*768px\s*\)/);
+    // Inside 768 media, checkboxes should be 44px
+    const media768 = css.split('@media (min-width: 768px)')[1] || '';
+    // Check that 44px appears after the media query (within it)
+    expect(media768).toMatch(/44px/);
+    // Base (outside media) should be compact 20px/18px for phone
+    const beforeMedia = css.split('@media (min-width: 768px)')[0];
+    expect(beforeMedia).toMatch(/\.step-done-checkbox[^}]*20px/);
+    expect(beforeMedia).toMatch(/\.prep-checkbox[^}]*18px/);
+    // Ensure we don't have universal 44px outside media (would affect mobile)
+    // The only 44px outside 768 should be none — count 44s before media should be 0
+    const count44Before = (beforeMedia.match(/44px/g) || []).length;
+    expect(count44Before).toBe(0);
   });
 
-  it('checkboxes should have adequate spacing (gap or padding >= 12px in CSS)', () => {
+  it('spacing is responsive: compact on mobile (6-8px), larger on iPad (12px+)', () => {
     const cssPath = path.resolve('public/css/views.css');
     const css = fs.readFileSync(cssPath, 'utf8');
-    // Look for gap or padding that prevents accidental taps - should be >=12px or 16px
-    // After fix, cooking-step__grid gap should be larger on iPad, or prep checklist gap
-    const hasLargeGap = css.includes('gap:') && (css.includes('12px') || css.includes('16px') || css.includes('gap: 12') || css.includes('gap: 16'));
-    expect(hasLargeGap).toBeTruthy();
-    // Also check that check container has padding/min-height for touch target
-    // The checkbox itself should have spacing via container styles
+    const beforeMedia = css.split('@media (min-width: 768px)')[0];
+    const afterMedia = css.split('@media (min-width: 768px)')[1] || '';
+    // Mobile: prep checklist gap should be 6px
+    expect(beforeMedia).toMatch(/\.prep-checklist[^}]*gap:\s*6px/);
+    // iPad: gap should increase to 12px
+    expect(afterMedia).toMatch(/\.prep-checklist[^}]*gap:\s*12px/);
+    expect(afterMedia).toMatch(/gap:\s*12px/);
   });
 });

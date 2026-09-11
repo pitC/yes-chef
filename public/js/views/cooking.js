@@ -157,18 +157,18 @@ export async function renderCookingView(params, container) {
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
             <div class="cooking-step__grid">
-              <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; padding:4px;">
-                <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="width:44px; height:44px; accent-color:var(--color-primary); cursor:pointer;" />
+              <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center;">
+                <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="accent-color:var(--color-primary); cursor:pointer;" />
               </label>
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
               <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
-              <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:12px; grid-column: 1 / -1;">
+              <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
                 ${scaledIngredients.map(ing => {
                   const isChecked = prepChecked.value.has(ing.id);
                   const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
-                  return `<li style="display:flex; align-items:center; gap:12px;">
-                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1; min-height:44px; padding:4px 0;">
-                      <input type="checkbox" class="prep-checkbox" data-ing-id="${ing.id}" ${isChecked ? 'checked' : ''} style="width:44px; height:44px; min-width:44px; min-height:44px; accent-color:var(--color-primary); cursor:pointer;" />
+                  return `<li style="display:flex; align-items:center; gap:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                      <input type="checkbox" class="prep-checkbox" data-ing-id="${ing.id}" ${isChecked ? 'checked' : ''} style="accent-color:var(--color-primary); cursor:pointer;" />
                       <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${ing.name} · ${formatAmount(ing.amount)} ${ing.unit}${notes}</span>
                     </label>
                   </li>`;

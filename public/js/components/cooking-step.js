@@ -32,8 +32,8 @@ export function renderCookingStep(step, ingredients, { isDone, isTimerRunning = 
 
   container.innerHTML = `
     <div class="cooking-step__grid">
-      <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; padding:4px;">
-        <input type="checkbox" class="step-done-checkbox" ${isDone ? 'checked' : ''} aria-label="Mark step as done" style="width:44px; height:44px; accent-color:var(--color-primary); cursor:pointer;" />
+      <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center;">
+        <input type="checkbox" class="step-done-checkbox" ${isDone ? 'checked' : ''} aria-label="Mark step as done" style="accent-color:var(--color-primary); cursor:pointer;" />
       </label>
       <span class="cooking-step__number" data-order="${step.order}" data-title="${title.replace(/"/g, '&quot;')}" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step ${step.order} · ${title}</span>
       <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">${highlight(step.text)}</div>
