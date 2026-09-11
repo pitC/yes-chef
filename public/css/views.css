@@ -820,11 +820,10 @@
   gap: 8px;
 }
 
-/* iPad / tablet touch targets — minimum 44x44 per iOS HIG */
+/* iPad / tablet touch targets — minimum 44x44 per iOS HIG — only step checkboxes */
 @media (min-width: 768px) {
   .step-done-checkbox,
-  .prep-done-checkbox,
-  .prep-checkbox {
+  .prep-done-checkbox {
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -837,20 +836,6 @@
     padding: 4px;
     justify-content: center;
     gap: 12px;
-  }
-
-  .prep-checklist {
-    gap: 12px;
-  }
-
-  .prep-checklist li {
-    gap: 12px;
-  }
-
-  .prep-checklist label {
-    gap: 12px;
-    min-height: 44px;
-    padding: 4px 0;
   }
 
   .cooking-step__grid {

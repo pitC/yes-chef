@@ -35,35 +35,37 @@ describe('issue #6: larger check buttons for iPad', () => {
     expect(cb.classList.contains('step-done-checkbox')).toBe(true);
   });
 
-  it('CSS is responsive: base 20px on mobile, 44x44 on iPad via 768px media query', async () => {
+  it('CSS is responsive: step checkboxes 44x44 on iPad, ingredient checkboxes stay 18px', async () => {
     const cssPath = path.resolve('public/css/views.css');
     const css = fs.readFileSync(cssPath, 'utf8');
     expect(css).toMatch(/44px/);
-    // Must have responsive media query for iPad
     expect(css).toMatch(/@media\s*\(\s*min-width:\s*768px\s*\)/);
-    // Inside 768 media, checkboxes should be 44px
     const media768 = css.split('@media (min-width: 768px)')[1] || '';
-    // Check that 44px appears after the media query (within it)
-    expect(media768).toMatch(/44px/);
-    // Base (outside media) should be compact 20px/18px for phone
     const beforeMedia = css.split('@media (min-width: 768px)')[0];
+    // Inside 768 media, step checkboxes should be 44px
+    expect(media768).toMatch(/\.step-done-checkbox[^}]*44px/);
+    expect(media768).toMatch(/\.prep-done-checkbox[^}]*44px/);
+    // Ingredient checkboxes must NOT enlarge on iPad — stay 18px
+    expect(media768).not.toMatch(/\.prep-checkbox[^}]*44px/);
+    // Base should be compact 20px/18px for phone
     expect(beforeMedia).toMatch(/\.step-done-checkbox[^}]*20px/);
     expect(beforeMedia).toMatch(/\.prep-checkbox[^}]*18px/);
-    // Ensure we don't have universal 44px outside media (would affect mobile)
-    // The only 44px outside 768 should be none — count 44s before media should be 0
     const count44Before = (beforeMedia.match(/44px/g) || []).length;
     expect(count44Before).toBe(0);
   });
 
-  it('spacing is responsive: compact on mobile (6-8px), larger on iPad (12px+)', () => {
+  it('spacing: step grid enlarges on iPad, ingredient checklist stays compact', () => {
     const cssPath = path.resolve('public/css/views.css');
     const css = fs.readFileSync(cssPath, 'utf8');
     const beforeMedia = css.split('@media (min-width: 768px)')[0];
     const afterMedia = css.split('@media (min-width: 768px)')[1] || '';
-    // Mobile: prep checklist gap should be 6px
+    // Mobile: both gaps compact 6px
     expect(beforeMedia).toMatch(/\.prep-checklist[^}]*gap:\s*6px/);
-    // iPad: gap should increase to 12px
-    expect(afterMedia).toMatch(/\.prep-checklist[^}]*gap:\s*12px/);
-    expect(afterMedia).toMatch(/gap:\s*12px/);
+    expect(beforeMedia).toMatch(/\.cooking-step__grid[^}]*gap:\s*6px 12px/);
+    // iPad: only step grid enlarges, ingredient checklist stays 6px
+    expect(afterMedia).toMatch(/\.cooking-step__grid[^}]*gap:\s*12px 16px/);
+    // Ingredient checklist must not have 12px gap in iPad media
+    const prepGap12InMedia = /@media[^}]*\.prep-checklist[^}]*gap:\s*12px/.test(css);
+    expect(prepGap12InMedia).toBe(false);
   });
 });
