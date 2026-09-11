@@ -1,18 +1,21 @@
-.PHONY: help deploy deploy-public deploy-hosting deploy-server deploy-all build-server check-gcloud
+.PHONY: help serve dev deploy deploy-public deploy-hosting deploy-server deploy-all build-server check-gcloud
 
 PROJECT ?= yes-chef-cookbook
 REGION  ?= europe-west1
 SERVICE ?= yes-chef-cookbook
+PORT    ?= 8000
 
 help:
 	@echo "Targets:"
+	@echo "  make serve           - serve public/ locally at http://localhost:$(PORT)/ (PORT=$(PORT))"
 	@echo "  make deploy          - deploy hosting only (alias for deploy-public)"
 	@echo "  make deploy-public   - firebase deploy --only hosting"
 	@echo "  make deploy-server   - gcloud run deploy --source . (Cloud Run: $(SERVICE) in $(REGION))"
 	@echo "  make deploy-all      - hosting + server"
 	@echo "  make build-server    - typecheck + build server (server/tsc)"
-	@echo "Variables: PROJECT=$(PROJECT) REGION=$(REGION) SERVICE=$(SERVICE)"
+	@echo "Variables: PROJECT=$(PROJECT) REGION=$(REGION) SERVICE=$(SERVICE) PORT=$(PORT)"
 	@echo "  Override: make deploy-server PROJECT=my-proj REGION=europe-west1 SERVICE=my-svc"
+	@echo "            make serve PORT=3000"
 
 deploy: deploy-public
 
@@ -20,6 +23,14 @@ deploy-public deploy-hosting:
 	firebase deploy --only hosting --project $(PROJECT)
 
 deploy-all: deploy-public deploy-server
+
+# Local dev: serve static PWA from public/ (no build step).
+# Requires Python 3; override port with PORT=3000.
+serve:
+	@echo "→ Serving public/ at http://localhost:$(PORT)/ (Ctrl+C to stop)"
+	python3 -m http.server $(PORT) --directory public
+
+dev: serve
 
 # Verify gcloud is installed and project is reachable before deploying.
 check-gcloud:
