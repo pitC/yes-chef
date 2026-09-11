@@ -158,7 +158,7 @@ export async function renderCookingView(params, container) {
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
             <div class="cooking-step__grid">
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
-              <div style="display:flex; gap:12px; align-items:flex-start;">
+              <div class="cooking-step__main" style="display:flex; gap:12px; align-items:flex-start;">
                 <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:flex-start; margin-top:2px;">
                   <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="accent-color:var(--color-primary); cursor:pointer;" />
                 </label>

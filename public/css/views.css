@@ -760,7 +760,8 @@
   overflow-wrap: break-word;
   word-break: break-word;
 }
-.cooking-step__grid .cooking-step__ingredients-meta {
+.cooking-step__grid .cooking-step__ingredients-meta,
+.cooking-step__grid .prep-checklist {
   grid-area: meta;
   min-width: 0;
   overflow: hidden;
