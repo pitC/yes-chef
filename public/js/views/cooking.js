@@ -157,12 +157,14 @@ export async function renderCookingView(params, container) {
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
           <div class="cooking-step cooking-step--prep" data-step-id="__prep__" style="scroll-snap-align: start;">
             <div class="cooking-step__grid">
-              <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:center;">
-                <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="accent-color:var(--color-primary); cursor:pointer;" />
-              </label>
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
-              <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
-              <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                <label class="cooking-step__check" style="cursor:pointer; display:flex; align-items:flex-start; margin-top:2px;">
+                  <input type="checkbox" class="prep-done-checkbox" ${prepDone.value ? 'checked' : ''} aria-label="Mark prep as done" style="accent-color:var(--color-primary); cursor:pointer;" />
+                </label>
+                <div class="cooking-step__text" style="flex:1; line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
+              </div>
+              <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px;">
                 ${scaledIngredients.map(ing => {
                   const isChecked = prepChecked.value.has(ing.id);
                   const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';

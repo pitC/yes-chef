@@ -729,17 +729,16 @@
 
 .cooking-step__grid {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr;
   grid-template-areas:
-    ". number"
-    "check text"
-    "meta meta"
-    "timer timer";
+    "number"
+    "main"
+    "meta"
+    "timer";
   gap: 6px 12px;
   align-items: start;
 }
 .cooking-step__grid .cooking-step__check {
-  grid-area: check;
   align-self: start;
   margin-top: 4px;
 }
@@ -748,8 +747,15 @@
   justify-self: start;
   align-self: center;
 }
+.cooking-step__grid .cooking-step__main {
+  grid-area: main;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
 .cooking-step__grid .cooking-step__text {
-  grid-area: text;
+  flex: 1;
   min-width: 0;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -847,12 +853,12 @@
 
 @media (min-width: 1024px) {
   .cooking-step__grid {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     grid-template-areas:
-      ". number"
-      "check text"
-      "meta meta"
-      "timer timer";
+      "number"
+      "main"
+      "meta"
+      "timer";
     align-items: start;
   }
   .cooking-step__grid .cooking-step__check {

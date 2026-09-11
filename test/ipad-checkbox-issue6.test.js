@@ -69,15 +69,33 @@ describe('issue #6: larger check buttons for iPad', () => {
     expect(prepGap12InMedia).toBe(false);
   });
 
-  it('step checkbox is aligned left with first line of text (grid check + text same row)', () => {
+  it('step checkbox is aligned left with first line of text (flex check + text)', () => {
     const cssPath = path.resolve('public/css/views.css');
     const css = fs.readFileSync(cssPath, 'utf8');
-    // Grid must place check left of text: grid-template-areas contains "check text" on same row
-    expect(css).toMatch(/"check text"/);
-    // And number is on its own top row, not sharing row with check — check aligns with text, not number
-    expect(css).toMatch(/"\. number"/);
-    // Check that grid uses start alignment so checkbox top aligns with text baseline
+    // New layout: number on its own row, main flex row contains check left of text
+    expect(css).toMatch(/"number"/);
+    expect(css).toMatch(/"main"/);
+    expect(css).toMatch(/\.cooking-step__main[^}]*display:\s*flex/);
+    expect(css).toMatch(/\.cooking-step__main[^}]*align-items:\s*flex-start/);
+    expect(css).toMatch(/\.cooking-step__main[^}]*gap:\s*12px/);
+    // Grid and flex use start alignment so checkbox top aligns with text baseline
     expect(css).toMatch(/align-items:\s*start/);
     expect(css).toMatch(/\.cooking-step__check[^}]*align-self:\s*start/);
+    // Verify rendered DOM: check and text are inside same flex container
+    const step = {
+      id: 'step_1',
+      order: 1,
+      text: 'Test step text for alignment',
+      timer: null,
+      ingredientRefs: [],
+    };
+    const c = document.createElement('div');
+    document.body.appendChild(c);
+    renderCookingStep(step, [], { isDone: false, onToggleDone: vi.fn(), onStartTimer: vi.fn() }, c);
+    const main = c.querySelector('.cooking-step__main');
+    expect(main).toBeTruthy();
+    expect(main.querySelector('.cooking-step__check')).toBeTruthy();
+    expect(main.querySelector('.cooking-step__text')).toBeTruthy();
+    document.body.removeChild(c);
   });
 });
