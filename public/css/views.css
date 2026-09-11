@@ -729,39 +729,30 @@
 
 .cooking-step__grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "number"
-    "main"
-    "meta"
-    "timer";
+    "check number"
+    "text text"
+    "meta meta"
+    "timer timer";
   gap: 6px 12px;
-  align-items: start;
+  align-items: center;
 }
 .cooking-step__grid .cooking-step__check {
-  align-self: start;
-  margin-top: 4px;
+  grid-area: check;
 }
 .cooking-step__grid .cooking-step__number {
   grid-area: number;
-  justify-self: start;
+  justify-self: end;
   align-self: center;
 }
-.cooking-step__grid .cooking-step__main {
-  grid-area: main;
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  min-width: 0;
-}
 .cooking-step__grid .cooking-step__text {
-  flex: 1;
+  grid-area: text;
   min-width: 0;
   overflow-wrap: break-word;
   word-break: break-word;
 }
-.cooking-step__grid .cooking-step__ingredients-meta,
-.cooking-step__grid .prep-checklist {
+.cooking-step__grid .cooking-step__ingredients-meta {
   grid-area: meta;
   min-width: 0;
   overflow: hidden;
@@ -854,16 +845,16 @@
 
 @media (min-width: 1024px) {
   .cooking-step__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-areas:
-      "number"
-      "main"
-      "meta"
-      "timer";
-    align-items: start;
+      "check number"
+      "text text"
+      "meta meta"
+      "timer timer";
+    align-items: center;
   }
   .cooking-step__grid .cooking-step__check {
-    margin-top: 4px;
+    margin-top: 0;
   }
 }
 
