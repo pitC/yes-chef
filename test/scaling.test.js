@@ -30,6 +30,23 @@ describe('scaling utilities', () => {
     it('scales 0.6 tsp by 3x -> 2 (ceil 1.8)', () => {
       expect(scaleAmount(0.6, 1, 3)).toBe(2);
     });
+
+    it('scales 1 tsp from 2 to 3 servings with half-increment -> 1.5', () => {
+      expect(scaleAmount(1, 2, 3, 'tsp')).toBe(1.5);
+    });
+
+    it('scales 1 tbsp from 2 to 3 servings with half-increment -> 1.5', () => {
+      expect(scaleAmount(1, 2, 3, 'tbsp')).toBe(1.5);
+    });
+
+    it('scales 1.2 tsp by 2x -> 2.5 (half ceil 2.4)', () => {
+      expect(scaleAmount(1.2, 1, 2, 'tsp')).toBe(2.5);
+    });
+
+    it('keeps integer ceil for non-tsp units', () => {
+      expect(scaleAmount(1, 2, 3, 'piece')).toBe(2);
+      expect(scaleAmount(1.2, 1, 2, 'g')).toBe(3);
+    });
   });
 
   describe('formatAmount', () => {
@@ -97,14 +114,22 @@ describe('scaling utilities', () => {
       expect(scaled[1].amount).toBe(2);
     });
 
-    it('rounds up fractional scaled amounts via scaleIngredients', () => {
+    it('rounds up fractional scaled amounts via scaleIngredients (g integer, tsp half)', () => {
       const ingredients = [
         { id: 'ing_1', name: 'flour', amount: 1.2, unit: 'g', notes: null },
         { id: 'ing_2', name: 'salt', amount: 0.6, unit: 'tsp', notes: null },
       ];
       const scaled = scaleIngredients(ingredients, 1, 2);
       expect(scaled[0].amount).toBe(3);
-      expect(scaled[1].amount).toBe(2);
+      expect(scaled[1].amount).toBe(1.5);
+    });
+
+    it('turmeric example: 1 tsp at 2 servings -> 1.5 tsp at 3 servings', () => {
+      const ingredients = [
+        { id: 'ing_1', name: 'turmeric', amount: 1, unit: 'tsp', notes: null },
+      ];
+      const scaled = scaleIngredients(ingredients, 2, 3);
+      expect(scaled[0].amount).toBe(1.5);
     });
   });
 });
