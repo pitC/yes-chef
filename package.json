@@ -7,8 +7,9 @@
     "lint": "eslint public/js test",
     "test": "vitest run",
     "prepare": "husky",
-    "deploy": "firebase deploy --only hosting --project yes-chef-cookbook",
-    "deploy:public": "firebase deploy --only hosting --project yes-chef-cookbook"
+    "bump:sw-cache": "make bump-sw-cache",
+    "deploy": "make deploy",
+    "deploy:public": "make deploy-public"
   },
   "license": "ISC",
   "type": "module",

@@ -1,4 +1,4 @@
-.PHONY: help serve dev deploy deploy-public deploy-hosting deploy-server deploy-all build-server check-gcloud
+.PHONY: help serve dev deploy deploy-public deploy-hosting deploy-server deploy-all build-server check-gcloud bump-sw-cache
 
 PROJECT ?= yes-chef-cookbook
 REGION  ?= europe-west1
@@ -19,8 +19,12 @@ help:
 
 deploy: deploy-public
 
-deploy-public deploy-hosting:
-	firebase deploy --only hosting --project $(PROJECT)
+# Bump service worker cache version so clients invalidate old PWA cache on deploy.
+bump-sw-cache:
+	node scripts/bump-sw-cache.mjs
+
+deploy-public deploy-hosting: bump-sw-cache
+	SKIP_SW_BUMP=1 firebase deploy --only hosting --project $(PROJECT)
 
 deploy-all: deploy-public deploy-server
 

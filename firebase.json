@@ -10,6 +10,9 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "predeploy": [
+      "if [ -z \"$SKIP_SW_BUMP\" ]; then node scripts/bump-sw-cache.mjs; else echo \"SKIP_SW_BUMP set — skipping SW cache bump (already bumped by caller)\"; fi"
+    ],
     "rewrites": [
       {
         "source": "**",
