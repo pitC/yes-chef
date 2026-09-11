@@ -21,6 +21,11 @@
       "type": "string",
       "description": "Source name/publication"
     },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Alias for sourceUrl — original source URL (requires sourceName)"
+    },
     "tags": {
       "type": "array",
       "items": { "type": "string" },
@@ -145,6 +150,14 @@
       "format": "date-time",
       "description": "Last update timestamp"
     }
+  },
+  "dependentRequired": {
+    "sourceUrl": ["sourceName"],
+    "url": ["sourceName"]
+  },
+  "dependencies": {
+    "sourceUrl": ["sourceName"],
+    "url": ["sourceName"]
   },
   "additionalProperties": false
 }

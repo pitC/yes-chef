@@ -34,7 +34,8 @@ const stepSchema = z.object({
 
 const baseRecipeInput = {
   title: z.string().min(1).describe("Recipe title"),
-  sourceUrl: z.string().url().optional().describe("Original source URL"),
+  sourceUrl: z.string().url().optional().describe("Original source URL (requires sourceName)"),
+  url: z.string().url().optional().describe("Alias for sourceUrl — requires sourceName"),
   sourceName: z.string().optional().describe("Source publication, e.g. 'The Guardian'"),
   tags: z.array(z.string()).optional().describe("Flat array of labels"),
   servings: z
@@ -53,6 +54,22 @@ const baseRecipeInput = {
   ingredients: z.array(ingredientSchema).min(1).describe("List of ingredients — unit must be in closed enum"),
   steps: z.array(stepSchema).min(1).describe("List of cooking steps"),
 };
+
+function hasSourceUrlWithoutName(data: Record<string, unknown>): boolean {
+  const urlVal = (data.sourceUrl as string) || (data.url as string);
+  const hasUrl = typeof urlVal === 'string' && urlVal.trim() !== '';
+  if (!hasUrl) return false;
+  const nameVal = data.sourceName as unknown;
+  const hasName = typeof nameVal === 'string' && String(nameVal).trim() !== '';
+  return !hasName;
+}
+
+function validateSourceFields(data: Record<string, unknown>): string | null {
+  if (hasSourceUrlWithoutName(data)) {
+    return 'sourceUrl/url requires sourceName — url without source name is not allowed';
+  }
+  return null;
+}
 
 function normalizeRecipeForValidation(input: Record<string, unknown>): Record<string, unknown> {
   // Ensure ingredients/steps have ids and defaults; coerce notes null etc.
@@ -125,6 +142,12 @@ export function createMcpServer(collectionName: string): McpServer {
           updatedAt: now,
         };
 
+        // Enforce sourceUrl/url requires sourceName (issue #1)
+        const sourceErr = validateSourceFields(candidate);
+        if (sourceErr) {
+          return { content: [{ type: "text", text: `Validation failed: ${sourceErr}` }], isError: true };
+        }
+
         // Validate before any Firestore I/O so callers get schema errors without needing emulator
         try {
           assertValidRecipe(candidate);
@@ -161,6 +184,7 @@ export function createMcpServer(collectionName: string): McpServer {
         .object({
           title: z.string().min(1).optional(),
           sourceUrl: z.string().url().optional(),
+          url: z.string().url().optional(),
           sourceName: z.string().optional(),
           tags: z.array(z.string()).optional(),
           servings: z
@@ -217,6 +241,12 @@ export function createMcpServer(collectionName: string): McpServer {
           merged.id = id;
           merged.createdAt = existing.createdAt;
           merged.updatedAt = nowIso();
+        }
+
+        // Enforce sourceUrl/url requires sourceName for updates as well (issue #1)
+        const updateSourceErr = validateSourceFields(merged);
+        if (updateSourceErr) {
+          return { content: [{ type: "text", text: `Validation failed: ${updateSourceErr}` }], isError: true };
         }
 
         try {
