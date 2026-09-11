@@ -7,12 +7,12 @@ describe('scaling utilities', () => {
       expect(scaleAmount(200, 2, 4)).toBe(400);
     });
 
-    it('scales 1 from 2 to 3 servings', () => {
-      expect(scaleAmount(1, 2, 3)).toBe(1.5);
+    it('scales 1 from 2 to 3 servings (ceil 1.5 -> 2)', () => {
+      expect(scaleAmount(1, 2, 3)).toBe(2);
     });
 
-    it('scales 0.5 from 2 to 1 serving', () => {
-      expect(scaleAmount(0.5, 2, 1)).toBe(0.25);
+    it('scales 0.5 from 2 to 1 serving (ceil 0.25 -> 1)', () => {
+      expect(scaleAmount(0.5, 2, 1)).toBe(1);
     });
 
     it('returns same amount when base equals target', () => {
@@ -21,6 +21,14 @@ describe('scaling utilities', () => {
 
     it('handles zero amount', () => {
       expect(scaleAmount(0, 2, 4)).toBe(0);
+    });
+
+    it('scales 1.2 cups by 2x -> 3 (ceil 2.4)', () => {
+      expect(scaleAmount(1.2, 1, 2)).toBe(3);
+    });
+
+    it('scales 0.6 tsp by 3x -> 2 (ceil 1.8)', () => {
+      expect(scaleAmount(0.6, 1, 3)).toBe(2);
     });
   });
 
@@ -86,6 +94,16 @@ describe('scaling utilities', () => {
       ];
       const scaled = scaleIngredients(ingredients, 2, 4);
       expect(scaled[0].amount).toBe(2);
+      expect(scaled[1].amount).toBe(2);
+    });
+
+    it('rounds up fractional scaled amounts via scaleIngredients', () => {
+      const ingredients = [
+        { id: 'ing_1', name: 'flour', amount: 1.2, unit: 'g', notes: null },
+        { id: 'ing_2', name: 'salt', amount: 0.6, unit: 'tsp', notes: null },
+      ];
+      const scaled = scaleIngredients(ingredients, 1, 2);
+      expect(scaled[0].amount).toBe(3);
       expect(scaled[1].amount).toBe(2);
     });
   });

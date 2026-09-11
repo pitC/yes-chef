@@ -1,6 +1,9 @@
 export function scaleAmount(amount, baseServings, targetServings) {
   if (baseServings === targetServings) return amount;
-  return (amount * targetServings) / baseServings;
+  if (amount === 0) return 0;
+  const raw = (amount * targetServings) / baseServings;
+  const ceiled = Math.ceil(raw - 1e-9);
+  return Object.is(ceiled, -0) ? 0 : ceiled;
 }
 
 export function formatAmount(amount) {
