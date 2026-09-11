@@ -1,5 +1,5 @@
 // Yes Chef - Service Worker
-const CACHE_NAME = 'yes-chef-v30';
+const CACHE_NAME = 'yes-chef-v31';
 const STATIC_ASSETS = [
   './',
   'index.html',

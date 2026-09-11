@@ -789,6 +789,7 @@
   height: 20px;
   min-width: 20px;
   min-height: 20px;
+  margin: 0 0 0 -1px;
   accent-color: var(--color-primary);
   cursor: pointer;
 }
@@ -805,6 +806,8 @@
 .cooking-step__check {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -828,13 +831,15 @@
     height: 44px;
     min-width: 44px;
     min-height: 44px;
+    margin-left: -1px;
   }
 
   .cooking-step__check {
     min-width: 44px;
     min-height: 44px;
-    padding: 4px;
-    justify-content: center;
+    padding: 0;
+    justify-content: flex-start;
+    align-items: center;
     gap: 12px;
   }
 

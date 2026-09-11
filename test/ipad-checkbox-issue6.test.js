@@ -68,4 +68,32 @@ describe('issue #6: larger check buttons for iPad', () => {
     const prepGap12InMedia = /@media[^}]*\.prep-checklist[^}]*gap:\s*12px/.test(css);
     expect(prepGap12InMedia).toBe(false);
   });
+
+  it('step checkbox shares title row and aligns left with description below', () => {
+    const cssPath = path.resolve('public/css/views.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    // Grid keeps check + number on same top row, text full-width below
+    expect(css).toMatch(/"check number"/);
+    expect(css).toMatch(/"text text"/);
+    // Check container flush left, no centering/padding that would inset it vs text
+    expect(css).toMatch(/\.cooking-step__check[^}]*justify-content:\s*flex-start/);
+    expect(css).toMatch(/\.cooking-step__check[^}]*padding:\s*0/);
+    const afterMedia = css.split('@media (min-width: 768px)')[1] || '';
+    expect(afterMedia).toMatch(/\.cooking-step__check[^}]*justify-content:\s*flex-start/);
+    expect(afterMedia).not.toMatch(/\.cooking-step__check[^}]*justify-content:\s*center/);
+    // Rendered DOM: check and number are siblings in grid, text is separate row below
+    const step = {
+      id: 'step_1',
+      order: 1,
+      text: 'Test step text',
+      timer: null,
+      ingredientRefs: [],
+    };
+    renderCookingStep(step, [], { isDone: false, onToggleDone: vi.fn(), onStartTimer: vi.fn() }, container);
+    const grid = container.querySelector('.cooking-step__grid');
+    expect(grid).toBeTruthy();
+    expect(grid.querySelector('.cooking-step__check')).toBeTruthy();
+    expect(grid.querySelector('.cooking-step__number')).toBeTruthy();
+    expect(grid.querySelector('.cooking-step__text')).toBeTruthy();
+  });
 });
