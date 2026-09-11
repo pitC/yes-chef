@@ -68,4 +68,16 @@ describe('issue #6: larger check buttons for iPad', () => {
     const prepGap12InMedia = /@media[^}]*\.prep-checklist[^}]*gap:\s*12px/.test(css);
     expect(prepGap12InMedia).toBe(false);
   });
+
+  it('step checkbox is aligned left with first line of text (grid check + text same row)', () => {
+    const cssPath = path.resolve('public/css/views.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    // Grid must place check left of text: grid-template-areas contains "check text" on same row
+    expect(css).toMatch(/"check text"/);
+    // And number is on its own top row, not sharing row with check — check aligns with text, not number
+    expect(css).toMatch(/"\. number"/);
+    // Check that grid uses start alignment so checkbox top aligns with text baseline
+    expect(css).toMatch(/align-items:\s*start/);
+    expect(css).toMatch(/\.cooking-step__check[^}]*align-self:\s*start/);
+  });
 });

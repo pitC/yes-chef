@@ -731,19 +731,21 @@
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-areas:
-    "check number"
-    "text text"
+    ". number"
+    "check text"
     "meta meta"
     "timer timer";
   gap: 6px 12px;
-  align-items: center;
+  align-items: start;
 }
 .cooking-step__grid .cooking-step__check {
   grid-area: check;
+  align-self: start;
+  margin-top: 2px;
 }
 .cooking-step__grid .cooking-step__number {
   grid-area: number;
-  justify-self: end;
+  justify-self: start;
   align-self: center;
 }
 .cooking-step__grid .cooking-step__text {
@@ -847,14 +849,14 @@
   .cooking-step__grid {
     grid-template-columns: auto 1fr;
     grid-template-areas:
-      "check number"
-      "text text"
+      ". number"
+      "check text"
       "meta meta"
       "timer timer";
-    align-items: center;
+    align-items: start;
   }
   .cooking-step__grid .cooking-step__check {
-    margin-top: 0;
+    margin-top: 2px;
   }
 }
 
