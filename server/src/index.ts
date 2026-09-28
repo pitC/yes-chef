@@ -4,6 +4,7 @@ import cors from "cors";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp.js";
+import { initServerAuth } from "./firestore.js";
 import { handleListRecipes, handleGetRecipe, handleGetMetadata } from "./api.js";
 import {
   getIssuer,
@@ -58,12 +59,24 @@ async function runStdio(): Promise<void> {
     process.exit(1);
   }
   const server = createMcpServer(collectionName);
+  try {
+    await initServerAuth();
+  } catch (e) {
+    console.error("[mcp] server auth failed — refusing to start without Firestore identity:", e);
+    process.exit(1);
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(`[mcp] Running in stdio mode collection=${collectionName}`);
 }
 
 async function runHttp(): Promise<void> {
+  try {
+    await initServerAuth();
+  } catch (e) {
+    console.error("[mcp] server auth failed — refusing to start without Firestore identity:", e);
+    process.exit(1);
+  }
   const app = express();
   app.use(
     cors({

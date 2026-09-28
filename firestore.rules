@@ -1,21 +1,31 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Config — which collections are established is stored in Firestore itself
-    // Do not hardcode collection keys here; rely on existence of metadata doc
+    // Only the web server may touch Firestore. It authenticates with the
+    // Firebase client SDK as a dedicated service user carrying the
+    // `isServer == true` custom claim (see docs/firestore_security_strategy.md).
+    // Browsers stay unauthenticated and are denied by every rule below.
+    // NEVER relax these to `request.auth != null` alone: if Anonymous
+    // sign-in is ever enabled, anyone can obtain an authed UID.
+    function isWebServer() {
+      return request.auth != null && request.auth.token.isServer == true;
+    }
+
+    // Config — server-only (previously world-readable)
     match /config/{docId} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if isWebServer();
     }
-    // Any collection: read allowed, write allowed only if collection is already established
-    // (has a metadata doc). This prevents arbitrary new collections via client SDK.
-    // All frontend calls go through the app server (which uses Firestore SDK with same rules),
-    // but the server is the only caller that will be used in practice.
+
+    // Cookbook collections: server-only, and only already-established
+    // collections (ones holding a `metadata` doc). Bootstrapping a brand-new
+    // collection (writing its first `metadata` doc) is denied here by design —
+    // provision new cookbooks via the Firebase Console, as before.
     match /{collection}/{docId} {
-      allow read: if true;
-      allow create, update, delete: if exists(/databases/$(database)/documents/$(collection)/metadata);
+      allow read, write: if isWebServer()
+        && exists(/databases/$(database)/documents/$(collection)/metadata);
     }
-    // Fallback deny (should not be reached due to above, but explicit)
+
+    // Fallback deny
     match /{other=**} {
       allow read, write: if false;
     }

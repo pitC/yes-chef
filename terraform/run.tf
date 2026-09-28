@@ -63,6 +63,41 @@ resource "google_cloud_run_v2_service" "yes_chef" {
         value = var.run_service_name
       }
 
+      # Firebase client config (apiKey/projectId) for the server's Firestore
+      # SDK + Auth sign-in. Mounted from Secret Manager, never in plaintext.
+      # Requires a `firebase-config` secret version holding the JSON config.
+      env {
+        name = "FIREBASE_CONFIG_JSON"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.firebase_config.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      # Service-user credentials for Firestore server auth (Firestore rules
+      # allow traffic only from this identity's `isServer` claim).
+      env {
+        name = "SERVER_AUTH_EMAIL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.server_auth_email.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "SERVER_AUTH_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.server_auth_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
       startup_probe {
         tcp_socket {
           port = 8080

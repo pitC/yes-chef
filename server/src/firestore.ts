@@ -1,4 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import {
   getFirestore,
   Firestore,
@@ -66,6 +67,64 @@ export function getDb(): Firestore {
 
 export function getFirestoreConfig() {
   return getFirebaseConfig();
+}
+
+// Server identity: the backend signs into Firebase Auth as a dedicated
+// service user carrying the `isServer == true` custom claim. Firestore rules
+// allow traffic only from that identity, so unauthenticated browsers calling
+// the Firestore API directly are denied. The client SDK refreshes the ID
+// token automatically for the life of the process.
+let _authInit: Promise<void> | null = null;
+
+export function initServerAuth(): Promise<void> {
+  if (_authInit) return _authInit;
+  _authInit = (async () => {
+    if (isAuthDisabled()) {
+      // Emulator path: rules/auth are bypassed locally (MCP_NO_AUTH=1).
+      // eslint-disable-next-line no-console
+      console.log("[firestore] Auth disabled (MCP_NO_AUTH) — skipping server sign-in");
+      return;
+    }
+    const email = (process.env.SERVER_AUTH_EMAIL || "").trim();
+    const password = process.env.SERVER_AUTH_PASSWORD || "";
+    if (!email || !password) {
+      throw new Error(
+        "SERVER_AUTH_EMAIL / SERVER_AUTH_PASSWORD are required (or set MCP_NO_AUTH=1 for the local emulator)"
+      );
+    }
+    initFirestore();
+    const auth = getAuth(_app!);
+    const maxAttempts = 5;
+    let lastErr: unknown = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { signInWithEmailAndPassword } = await import("firebase/auth");
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        // eslint-disable-next-line no-console
+        console.log(`[firestore] Server authenticated as ${cred.user.uid} (service user)`);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (attempt < maxAttempts) {
+          const backoffMs = 1000 * 2 ** (attempt - 1);
+          // eslint-disable-next-line no-console
+          console.log(`[firestore] Sign-in attempt ${attempt}/${maxAttempts} failed, retrying in ${backoffMs}ms`);
+          await new Promise((r) => setTimeout(r, backoffMs));
+        }
+      }
+    }
+    throw new Error(
+      `Server sign-in failed after ${maxAttempts} attempts: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`
+    );
+  })();
+  return _authInit;
+}
+
+/** Test hook: reset cached auth promise (and db) between tests. */
+export function _resetAuthForTests(): void {
+  _authInit = null;
+  _db = null;
+  _app = null;
 }
 
 /** Check if a Firestore collection is established (has metadata doc) — used for multi-tenant auth */
