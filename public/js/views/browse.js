@@ -3,6 +3,7 @@ import { filterByTags, filterByKeyword, extractAllTags } from '../utils/tags.js'
 import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderRecipeCard } from '../components/recipe-card.js';
+import { attachCookbookSwitcher } from '../components/cookbook-switcher.js';
 
 export async function renderBrowseView(params, container) {
   let recipes;
@@ -55,12 +56,15 @@ export async function renderBrowseView(params, container) {
   const filteredRecipes = computed(() => {
     let result = filterByTags(recipes, Array.from(selectedTags.value));
     result = filterByKeyword(result, debouncedQuery.value);
-    return result;
+    return [...result].sort((a, b) =>
+      String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' }),
+    );
   });
 
   container.innerHTML = `
     <header class="app-header">
-      <h1 class="app-header__title">Yes Chef</h1>
+      <img src="icons/icon-192.png" alt="Yes Chef logo" class="app-header__logo" />
+      <h1 class="app-header__title cookbook-switcher__trigger">Yes Chef</h1>
     </header>
     <main class="app-main">
       <input type="search" class="search-bar search-input" placeholder="Search recipes..." aria-label="Search recipes" />
@@ -73,6 +77,8 @@ export async function renderBrowseView(params, container) {
   `;
 
   const searchInput = container.querySelector('.search-bar');
+  const detachSwitcher = attachCookbookSwitcher(container.querySelector('.app-header__title'));
+  unsubs.push(detachSwitcher);
   searchInput.addEventListener('input', (e) => {
     searchQuery.value = e.target.value;
   });

@@ -24,6 +24,14 @@
   gap: var(--spacing-md);
 }
 
+.app-header__logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
 .app-header__title {
   margin: 0;
   font-size: 1.25rem;
@@ -56,6 +64,9 @@
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .recipe-card:hover {
@@ -72,12 +83,23 @@
 
 .recipe-card__content {
   padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .recipe-card__title {
   margin: 0 0 var(--spacing-xs);
   font-size: 1.1rem;
   font-weight: 600;
+  line-height: 1.3;
+  min-height: calc(1.1rem * 1.3 * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: break-word;
 }
 
 .recipe-card__meta {
@@ -85,6 +107,8 @@
   gap: var(--spacing-md);
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+  min-height: 1.2em;
+  align-items: center;
 }
 
 .recipe-card__tags {
@@ -92,6 +116,7 @@
   flex-wrap: wrap;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-sm);
+  align-content: flex-start;
 }
 
 .tag {
@@ -212,6 +237,13 @@
   gap: var(--spacing-md);
   color: var(--color-text-secondary);
   font-size: 0.9rem;
+}
+
+.recipe-detail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
 }
 
 .servings-stepper {
@@ -874,4 +906,164 @@
 
 .mt-auto {
   margin-top: auto;
+}
+
+/* Cookbook switcher */
+.cookbook-switcher__trigger {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.cookbook-switcher__trigger:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.cookbook-switcher__trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.cookbook-switcher__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 43, 43, 0.45);
+  padding: 20px;
+}
+
+.cookbook-switcher__dialog {
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+}
+
+.cookbook-switcher__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cookbook-switcher__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.cookbook-switcher__list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cookbook-switcher__empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.cookbook-switcher__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.cookbook-switcher__item--active {
+  border-color: var(--color-primary);
+  background: rgba(64, 109, 104, 0.06);
+}
+
+.cookbook-switcher__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cookbook-switcher__name {
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.cookbook-switcher__badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.cookbook-switcher__code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  overflow-wrap: break-word;
+}
+
+.cookbook-switcher__note {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  overflow-wrap: break-word;
+}
+
+.cookbook-switcher__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cookbook-switcher__row-actions .btn {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.cookbook-switcher__add {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.cookbook-switcher__subtitle {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.cookbook-switcher__input {
+  margin-bottom: 4px;
+}
+
+.cookbook-switcher__error {
+  display: none;
+  color: #b91c1c;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+
+.cookbook-switcher__add-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }

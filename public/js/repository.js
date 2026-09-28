@@ -8,6 +8,7 @@ import {
   removeStoredCollectionKey,
   markFirestoreSkipped,
   isFirestoreSkipped,
+  saveCookbookMeta,
 } from './storage.js';
 
 export const METADATA_DOCUMENT_ID = 'metadata';
@@ -32,18 +33,73 @@ export function normalizeCollectionKey(input) {
 }
 
 export async function fetchCollectionMetadata() {
+  const key = loadStoredCollectionKey();
+  if (!key) return null;
+  return fetchMetadataForKey(key);
+}
+
+export async function fetchMetadataForKey(collectionKey) {
+  const key = normalizeCollectionKey(collectionKey);
   if (isTestEnv) return null;
+  if (!key) return null;
   const base = getBaseUrl();
-  const headers = {};
-  const auth = getAuthHeader();
-  if (auth) headers.Authorization = auth;
   try {
-    const resp = await fetch(`${base}/api/metadata`, { headers });
+    const resp = await fetch(`${base}/api/metadata`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
     if (!resp.ok) return null;
     const data = await resp.json();
-    return data;
+    if (data && typeof data === 'object') {
+      try {
+        saveCookbookMeta(key, data);
+      } catch {
+        // cache best-effort; ignore
+      }
+      return data;
+    }
+    return null;
   } catch {
     return null;
+  }
+}
+
+export function getCookbookName(meta) {
+  if (!meta || typeof meta !== 'object') return null;
+  const candidates = [meta.name, meta.title, meta.cookbookName];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return null;
+}
+
+export function getCookbookNote(meta) {
+  if (!meta || typeof meta !== 'object') return null;
+  const candidates = [meta.note, meta.notes, meta.description];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return null;
+}
+
+export async function validateCookbookCode(collectionKey) {
+  const key = normalizeCollectionKey(collectionKey);
+  if (!key) return { ok: false, error: 'Enter a cookbook code without slashes.' };
+  if (isTestEnv) {
+    saveStoredCollectionKey(key);
+    return { ok: true, key };
+  }
+  const base = getBaseUrl();
+  try {
+    const resp = await fetch(`${base}/api/recipes`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (resp.status === 401) return { ok: false, error: 'Invalid code — please check and try again.' };
+    if (!resp.ok) return { ok: false, error: `Verification failed (HTTP ${resp.status}) — try again.` };
+    saveStoredCollectionKey(key);
+    await fetchMetadataForKey(key);
+    return { ok: true, key };
+  } catch {
+    return { ok: false, error: 'Network error — please try again.' };
   }
 }
 
@@ -99,8 +155,13 @@ export function showRepositorySetup(statusEl) {
           saveBtn.textContent = 'Save & sync';
           return;
         }
-        // Valid — persist and resolve
+        // Valid — persist, cache metadata best-effort, and resolve
         saveStoredCollectionKey(collectionKey);
+        try {
+          await fetchMetadataForKey(collectionKey);
+        } catch {
+          // metadata cache best-effort; ignore
+        }
         resolve(collectionKey);
       } catch {
         showError('Network error — please try again.');
