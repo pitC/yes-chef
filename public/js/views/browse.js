@@ -4,6 +4,7 @@ import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderRecipeCard } from '../components/recipe-card.js';
 import { attachCookbookSwitcher } from '../components/cookbook-switcher.js';
+import { renderEmptyCookbook } from '../components/empty-cookbook.js';
 
 export async function renderBrowseView(params, container) {
   let recipes;
@@ -35,6 +36,7 @@ export async function renderBrowseView(params, container) {
     throw e;
   }
   const allTags = extractAllTags(recipes);
+  const isEmptyCookbook = recipes.length === 0;
 
   const searchQuery = signal('');
   const selectedTags = signal(new Set());
@@ -67,21 +69,24 @@ export async function renderBrowseView(params, container) {
       <h1 class="app-header__title cookbook-switcher__trigger">Yes Chef</h1>
     </header>
     <main class="app-main">
-      <input type="search" class="search-bar search-input" placeholder="Search recipes..." aria-label="Search recipes" />
-      <div class="filter-chips tag-filters">
+      <input type="search" class="search-bar search-input" placeholder="Search recipes..." aria-label="Search recipes"${isEmptyCookbook ? ' hidden' : ''} />
+      <div class="filter-chips tag-filters"${isEmptyCookbook ? ' hidden' : ''}>
         ${allTags.map((tag) => `<button class="filter-chip tag-chip" data-tag="${tag}">${tag}</button>`).join('')}
       </div>
       <div class="recipe-list recipe-grid"></div>
       <div class="empty-state hidden" style="display: none;">No recipes found</div>
+      ${isEmptyCookbook ? '<div class="empty-cookbook-slot"></div>' : ''}
     </main>
   `;
 
   const searchInput = container.querySelector('.search-bar');
   const detachSwitcher = attachCookbookSwitcher(container.querySelector('.app-header__title'));
   unsubs.push(detachSwitcher);
-  searchInput.addEventListener('input', (e) => {
-    searchQuery.value = e.target.value;
-  });
+  if (searchInput && !isEmptyCookbook) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery.value = e.target.value;
+    });
+  }
 
   const tagChips = container.querySelectorAll('.filter-chip');
   tagChips.forEach((chip) => {
@@ -101,6 +106,20 @@ export async function renderBrowseView(params, container) {
 
   const grid = container.querySelector('.recipe-list');
   const emptyState = container.querySelector('.empty-state');
+
+  if (isEmptyCookbook) {
+    const slot = container.querySelector('.empty-cookbook-slot');
+    if (slot) renderEmptyCookbook(slot);
+    grid.innerHTML = '';
+    emptyState.classList.add('hidden');
+    emptyState.style.display = 'none';
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      unsubs.forEach((fn) => {
+        if (typeof fn === 'function') fn();
+      });
+    };
+  }
 
   unsubs.push(
     effect(() => {

@@ -895,6 +895,106 @@
   }
 }
 
+/* Empty cookbook onboarding (MCP instructions) */
+.empty-cookbook {
+  max-width: 640px;
+  margin: 24px auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  text-align: left;
+}
+
+.empty-cookbook__icon {
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.empty-cookbook__title {
+  margin: 8px 0;
+  font-size: 1.4rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.empty-cookbook__text {
+  margin: 0 0 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.empty-cookbook__steps {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--color-text);
+}
+
+.empty-cookbook__steps li {
+  margin-bottom: 4px;
+}
+
+.empty-cookbook__creds {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.empty-cookbook__cred {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: rgba(64, 109, 104, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.empty-cookbook__label {
+  width: 100%;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.empty-cookbook__secret {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.empty-cookbook__value {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.empty-cookbook__copy {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.empty-cookbook__hint,
+.empty-cookbook__note {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.empty-cookbook__note {
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
 /* Utility */
 .hidden {
   display: none !important;
