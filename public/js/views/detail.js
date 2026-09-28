@@ -92,9 +92,9 @@ export async function renderDetailView(params, container) {
           <span>•</span>
           <span>${recipe.servings.base} ${recipe.servings.unit}</span>
           ${sourceMarkup}
-          <div class="recipe-card__tags" style="margin-left:auto;">
-            ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
-          </div>
+        </div>
+        <div class="recipe-detail__tags">
+          ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
         </div>
       </div>
 
