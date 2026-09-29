@@ -197,10 +197,12 @@ describe('cookbook switcher component', () => {
     const overlay = document.querySelector('.cookbook-switcher__overlay');
     expect(overlay).toBeTruthy();
     expect(overlay.textContent).toContain('Family Book');
-    expect(overlay.textContent).toContain('code-a');
+    expect(overlay.textContent).toContain('c***-a***');
+    expect(overlay.textContent).not.toContain('code-a');
     expect(overlay.textContent).toContain('Shared notes');
     expect(overlay.textContent).toContain('Second Book');
-    expect(overlay.textContent).toContain('code-b');
+    expect(overlay.textContent).toContain('c***-b***');
+    expect(overlay.textContent).not.toContain('code-b');
     expect(overlay.textContent).toContain('Other notes');
 
     const items = overlay.querySelectorAll('.cookbook-switcher__item');

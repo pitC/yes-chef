@@ -31,6 +31,14 @@ function reloadApp() {
   }
 }
 
+export function redactCookbookCode(code) {
+  if (typeof code !== 'string' || !code) return '';
+  return code
+    .split('-')
+    .map((part) => (part ? `${part[0]}***` : ''))
+    .join('-');
+}
+
 function renderKnownList(listEl, { keys, activeKey, metaByCode, onSwitch, onRemove }) {
   if (!keys.length) {
     listEl.innerHTML = '<p class="cookbook-switcher__empty">No cookbooks yet — add one below.</p>';
@@ -39,19 +47,20 @@ function renderKnownList(listEl, { keys, activeKey, metaByCode, onSwitch, onRemo
   listEl.innerHTML = keys
     .map((code) => {
       const meta = metaByCode[code] || null;
-      const name = getCookbookName(meta) || code;
+      const displayCode = redactCookbookCode(code);
+      const name = getCookbookName(meta) || displayCode;
       const note = getCookbookNote(meta) || '';
       const isActive = code === activeKey;
       return `
       <li class="cookbook-switcher__item${isActive ? ' cookbook-switcher__item--active' : ''}" data-code="${escapeHtml(code)}">
         <div class="cookbook-switcher__info">
           <span class="cookbook-switcher__name">${escapeHtml(name)}${isActive ? ' <span class="cookbook-switcher__badge">Current</span>' : ''}</span>
-          <span class="cookbook-switcher__code">${escapeHtml(code)}</span>
+          <span class="cookbook-switcher__code">${escapeHtml(displayCode)}</span>
           ${note ? `<span class="cookbook-switcher__note">${escapeHtml(note)}</span>` : ''}
         </div>
         <div class="cookbook-switcher__row-actions">
           ${isActive ? '' : '<button class="btn btn--secondary cookbook-switcher__switch" type="button">Switch</button>'}
-          <button class="btn btn--ghost cookbook-switcher__remove" type="button" aria-label="Remove ${escapeHtml(code)}">✕</button>
+          <button class="btn btn--ghost cookbook-switcher__remove" type="button" aria-label="Remove ${escapeHtml(displayCode)}">✕</button>
         </div>
       </li>`;
     })
