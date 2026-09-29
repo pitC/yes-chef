@@ -1,5 +1,6 @@
 import { getRecipe } from '../data/recipes.js';
 import { scaleIngredients, formatAmount } from '../utils/scaling.js';
+import { escapeHtml, safeHttpUrl, highlightSafe } from '../utils/escape.js';
 import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderServingsStepper } from '../components/servings-stepper.js';
@@ -69,32 +70,32 @@ export async function renderDetailView(params, container) {
     recipe.timing?.totalMinutes ||
     (recipe.timing?.prepMinutes || 0) + (recipe.timing?.cookMinutes || 0);
 
-  const sourceUrl = typeof recipe.sourceUrl === 'string' ? recipe.sourceUrl.trim() : '';
+  const sourceUrl = safeHttpUrl(typeof recipe.sourceUrl === 'string' ? recipe.sourceUrl.trim() : '');
   const sourceName = typeof recipe.sourceName === 'string' ? recipe.sourceName.trim() : '';
   let sourceMarkup = '';
   if (sourceUrl) {
-    const label = sourceName || sourceUrl;
-    sourceMarkup = `<span>•</span><a href="${sourceUrl}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${label} ↗</a>`;
+    const label = escapeHtml(sourceName || recipe.sourceUrl.trim());
+    sourceMarkup = `<span>•</span><a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener" style="font-size:0.9rem; color:var(--color-primary);">${label} ↗</a>`;
   } else if (sourceName) {
-    sourceMarkup = `<span>•</span><span style="font-size:0.9rem; color:var(--color-primary);">${sourceName}</span>`;
+    sourceMarkup = `<span>•</span><span style="font-size:0.9rem; color:var(--color-primary);">${escapeHtml(sourceName)}</span>`;
   }
 
   container.innerHTML = `
     <header class="app-header">
       <button class="btn btn--ghost back-btn" aria-label="Back to browse">← Back</button>
-      <h1 class="app-header__title" style="flex:1; text-align:center; margin-right:60px;" title="${recipe.title.replace(/"/g, '&quot;')}">${recipe.title}</h1>
+      <h1 class="app-header__title" style="flex:1; text-align:center; margin-right:60px;" title="${escapeHtml(recipe.title)}">${escapeHtml(recipe.title)}</h1>
     </header>
     <main class="app-main" style="max-width:900px; margin:0 auto; width:100%;">
       <div class="recipe-detail__header">
-        <h1 class="recipe-detail__title">${recipe.title}</h1>
+        <h1 class="recipe-detail__title">${escapeHtml(recipe.title)}</h1>
         <div class="recipe-detail__meta">
-          <span>⏱ ${totalTime} min</span>
+          <span>⏱ ${escapeHtml(totalTime)} min</span>
           <span>•</span>
-          <span>${recipe.servings.base} ${recipe.servings.unit}</span>
+          <span>${escapeHtml(recipe.servings.base)} ${escapeHtml(recipe.servings.unit)}</span>
           ${sourceMarkup}
         </div>
         <div class="recipe-detail__tags">
-          ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
+          ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`).join('')}
         </div>
       </div>
 
@@ -132,10 +133,10 @@ export async function renderDetailView(params, container) {
         (ing) => `
         <li class="ingredient-item">
           <span class="ingredient-item__main">
-            <strong class="ingredient-item__amount">${formatAmount(ing.amount)} ${ing.unit}</strong>
-            <span class="ingredient-item__name">${ing.name}</span>
+            <strong class="ingredient-item__amount">${escapeHtml(formatAmount(ing.amount))} ${escapeHtml(ing.unit)}</strong>
+            <span class="ingredient-item__name">${escapeHtml(ing.name)}</span>
           </span>
-          ${ing.notes ? `<span class="ingredient-item__notes">${ing.notes}</span>` : ''}
+          ${ing.notes ? `<span class="ingredient-item__notes">${escapeHtml(ing.notes)}</span>` : ''}
         </li>
       `,
       )
@@ -143,18 +144,18 @@ export async function renderDetailView(params, container) {
   });
 
   function highlightText(text) {
-    return text.replace(/\[([^\]]+)\]/g, '<span class="ingredient-highlight">$1</span>');
+    return highlightSafe(text);
   }
 
   const stepsList = container.querySelector('.steps-list');
   stepsList.innerHTML = recipe.steps
     .map(
       (step) => `
-      <li class="step-item" data-step-id="${step.id}" style="align-items:flex-start;">
-        <span class="step-item__number">${step.order}</span>
+      <li class="step-item" data-step-id="${escapeHtml(step.id)}" style="align-items:flex-start;">
+        <span class="step-item__number">${escapeHtml(step.order)}</span>
         <div class="step-item__content">
           <p class="step-item__text">${highlightText(step.text)}</p>
-          ${step.timer ? `<span class="step-item__timer">⏱ ${step.timer.label} · ${formatDuration(step.timer.durationSeconds)}</span>` : ''}
+          ${step.timer ? `<span class="step-item__timer">⏱ ${escapeHtml(step.timer.label)} · ${escapeHtml(formatDuration(step.timer.durationSeconds))}</span>` : ''}
         </div>
       </li>
     `,

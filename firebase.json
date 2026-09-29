@@ -10,6 +10,29 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://yes-chef-cookbook-158345618336.europe-west1.run.app https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          }
+        ]
+      }
+    ],
     "predeploy": [
       "if [ -z \"$SKIP_SW_BUMP\" ]; then node scripts/bump-sw-cache.mjs; else echo \"SKIP_SW_BUMP set — skipping SW cache bump (already bumped by caller)\"; fi"
     ],

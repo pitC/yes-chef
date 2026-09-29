@@ -86,6 +86,15 @@ async function runHttp(): Promise<void> {
       exposedHeaders: ["WWW-Authenticate"],
     })
   );
+  // Minimal hardening headers (no extra dep; mirrors Firebase Hosting headers for the PWA).
+  // Defense-in-depth for stored XSS: block framing/sniffing; CSP is report-tolerant
+  // here because MCP clients POST cross-origin JSON.
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
   // Bodies: JSON for MCP + urlencoded/json for OAuth token/register/authorize
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ extended: false }));

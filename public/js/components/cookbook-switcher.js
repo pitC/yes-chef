@@ -13,16 +13,9 @@ import {
   validateCookbookCode,
 } from '../repository.js';
 
-export const FALLBACK_COOKBOOK_TITLE = 'Yes Chef';
+import { escapeHtml } from '../utils/escape.js';
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+export const FALLBACK_COOKBOOK_TITLE = 'Yes Chef';
 
 export function resolveCookbookDisplayName(meta, fallback = FALLBACK_COOKBOOK_TITLE) {
   return getCookbookName(meta) || fallback;

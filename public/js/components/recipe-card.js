@@ -10,6 +10,8 @@ function getTagClass(tag) {
   return 'tag--default';
 }
 
+import { escapeHtml } from '../utils/escape.js';
+
 export function renderRecipeCard(recipe, container) {
   const totalTime =
     recipe.timing?.totalMinutes ||
@@ -17,12 +19,12 @@ export function renderRecipeCard(recipe, container) {
 
   container.innerHTML = `
     <div class="recipe-card__content">
-      <h3 class="recipe-card__title">${recipe.title}</h3>
+      <h3 class="recipe-card__title">${escapeHtml(recipe.title)}</h3>
       <div class="recipe-card__meta">
-        <span>${totalTime} min</span>
+        <span>${escapeHtml(totalTime)} min</span>
       </div>
       <div class="recipe-card__tags">
-        ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${tag}">${tag}</span>`).join('')}
+        ${recipe.tags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`).join('')}
       </div>
     </div>
   `;

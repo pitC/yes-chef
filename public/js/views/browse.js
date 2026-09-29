@@ -1,5 +1,6 @@
 import { getRecipes } from '../data/recipes.js';
 import { filterByTags, filterByKeyword, extractAllTags } from '../utils/tags.js';
+import { escapeHtml } from '../utils/escape.js';
 import { navigate } from '../router.js';
 import { signal, computed, effect } from '../signals.js';
 import { renderRecipeCard } from '../components/recipe-card.js';
@@ -71,7 +72,7 @@ export async function renderBrowseView(params, container) {
     <main class="app-main">
       <input type="search" class="search-bar search-input" placeholder="Search recipes..." aria-label="Search recipes"${isEmptyCookbook ? ' hidden' : ''} />
       <div class="filter-chips tag-filters"${isEmptyCookbook ? ' hidden' : ''}>
-        ${allTags.map((tag) => `<button class="filter-chip tag-chip" data-tag="${tag}">${tag}</button>`).join('')}
+        ${allTags.map((tag) => `<button class="filter-chip tag-chip" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('')}
       </div>
       <div class="recipe-list recipe-grid"></div>
       <div class="empty-state hidden" style="display: none;">No recipes found</div>

@@ -6,6 +6,7 @@ import { renderTimerTray } from '../components/timer-tray.js';
 import { timerManager } from '../timers/manager.js';
 import { scheduleNotification } from '../timers/sw-messaging.js';
 import { scaleIngredients, formatAmount } from '../utils/scaling.js';
+import { escapeHtml } from '../utils/escape.js';
 import { requestWakeLock, releaseWakeLock, isWakeLockSupported, isWakeLockActive } from '../wake-lock.js';
 
 export const doneSteps = signal(new Set());
@@ -151,7 +152,7 @@ export async function renderCookingView(params, container) {
       <div class="cooking-mode">
         <header class="cooking-mode__header">
           <button class="exit-cooking-btn btn btn--ghost" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
-          <h1 title="${recipe.title.replace(/"/g, '&quot;')}" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${recipe.title}</h1>
+          <h1 title="${escapeHtml(recipe.title)}" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(recipe.title)}</h1>
           <button class="wake-lock-btn btn btn--ghost" aria-label="Keep screen awake" title="Keep screen awake" style="flex-shrink:0; font-size:0.85rem; border:1px solid var(--color-border); white-space:nowrap;">${!isWakeLockSupported() ? '⚠️ Unsupported' : isWakeLockActive() ? '☀️ Awake' : '🌙 Keep awake'}</button>
         </header>
         <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory;">
@@ -163,21 +164,21 @@ export async function renderCookingView(params, container) {
               <span class="cooking-step__number" style="font-weight:700; color:var(--color-text-secondary); font-size:0.85rem;">Step 0 · Preparation</span>
               <div class="cooking-step__text" style="line-height:1.65; font-size:1.02rem; color:var(--color-text);">Check that you have everything in place before you start.</div>
               <ul class="prep-checklist" style="list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:6px; grid-column: 1 / -1;">
-                ${scaledIngredients.map(ing => {
+                ${scaledIngredients.map((ing) => {
                   const isChecked = prepChecked.value.has(ing.id);
-                  const notes = ing.notes ? ` <span style="opacity:0.7;">${ing.notes}</span>` : '';
+                  const notes = ing.notes ? ` <span style="opacity:0.7;">${escapeHtml(ing.notes)}</span>` : '';
                   return `<li style="display:flex; align-items:center; gap:8px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
-                      <input type="checkbox" class="prep-checkbox" data-ing-id="${ing.id}" ${isChecked ? 'checked' : ''} style="accent-color:var(--color-primary); cursor:pointer;" />
-                      <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${ing.name} · ${formatAmount(ing.amount)} ${ing.unit}${notes}</span>
+                      <input type="checkbox" class="prep-checkbox" data-ing-id="${escapeHtml(ing.id)}" ${isChecked ? 'checked' : ''} style="accent-color:var(--color-primary); cursor:pointer;" />
+                      <span style="${isChecked ? 'text-decoration:line-through; opacity:0.6;' : ''}">${escapeHtml(ing.name)} · ${escapeHtml(formatAmount(ing.amount))} ${escapeHtml(ing.unit)}${notes}</span>
                     </label>
                   </li>`;
                 }).join('')}
               </ul>
             </div>
           </div>
-          ${recipe.steps.map(step => `
-            <div class="cooking-step" data-step-id="${step.id}" style="scroll-snap-align: start;"></div>
+          ${recipe.steps.map((step) => `
+            <div class="cooking-step" data-step-id="${escapeHtml(step.id)}" style="scroll-snap-align: start;"></div>
           `).join('')}
           <div class="cooking-complete-banner" style="display:none; text-align:center; padding:28px 16px; margin-top:8px; background:var(--color-surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); font-size:1.5rem; font-weight:700; color:var(--color-primary-dark);"></div>
         </div>

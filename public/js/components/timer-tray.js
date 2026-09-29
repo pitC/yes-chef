@@ -1,3 +1,5 @@
+import { escapeHtml } from '../utils/escape.js';
+
 export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, container) {
   function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
@@ -26,12 +28,12 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
     const timerList = allTimers.length ? `
       <div class="timer-tray" style="position:fixed; bottom:0; left:0; right:0; z-index:500;">
         <div class="timer-tray__list">
-        ${allTimers.map(timer => `
-          <div class="timer-item ${timer.done ? 'done' : timer.remainingSeconds < 10 ? 'warning' : ''}" data-id="${timer.id}" style="background-color: ${timer.done ? '#E67A3E' : timer.remainingSeconds < 10 ? '#E67A3E' : '#406D68'};">
-            <span class="timer-item__label">${timer.label}</span>
-            <span class="timer-item__time">${formatTime(timer.remainingSeconds)}</span>
-            ${!timer.done ? `<button class="timer-pause btn btn--secondary" data-id="${timer.id}">${timer.running ? 'Pause' : 'Resume'}</button>` : ''}
-            <button class="timer-dismiss timer-item__dismiss" data-id="${timer.id}" style="pointer-events:auto;">✕</button>
+        ${allTimers.map((timer) => `
+          <div class="timer-item ${timer.done ? 'done' : timer.remainingSeconds < 10 ? 'warning' : ''}" data-id="${escapeHtml(timer.id)}" style="background-color: ${timer.done ? '#E67A3E' : timer.remainingSeconds < 10 ? '#E67A3E' : '#406D68'};">
+            <span class="timer-item__label">${escapeHtml(timer.label)}</span>
+            <span class="timer-item__time">${escapeHtml(formatTime(timer.remainingSeconds))}</span>
+            ${!timer.done ? `<button class="timer-pause btn btn--secondary" data-id="${escapeHtml(timer.id)}">${timer.running ? 'Pause' : 'Resume'}</button>` : ''}
+            <button class="timer-dismiss timer-item__dismiss" data-id="${escapeHtml(timer.id)}" style="pointer-events:auto;">✕</button>
           </div>
         `).join('')}
         </div>
@@ -43,7 +45,7 @@ export function renderTimerTray(timersSignal, { onDismiss, onPause, onResume }, 
       <div class="timer-confirm-backdrop" style="position:fixed; inset:0; background:rgba(43,43,43,0.45); display:flex; align-items:center; justify-content:center; z-index:600; padding:16px;">
         <div class="timer-confirm-dialog" role="dialog" aria-modal="true" aria-label="Confirm close timer" style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); padding:20px; max-width:340px; width:100%; text-align:center;">
           <p style="margin:0 0 8px; font-weight:600; color:var(--color-text);">Close timer?</p>
-          <p style="margin:0 0 16px; font-size:0.9rem; color:var(--color-text-secondary);">“${pendingTimer.label}” will be removed.</p>
+          <p style="margin:0 0 16px; font-size:0.9rem; color:var(--color-text-secondary);">“${escapeHtml(pendingTimer.label)}” will be removed.</p>
           <div style="display:flex; gap:12px; justify-content:center;">
             <button class="timer-confirm-cancel btn btn--secondary" style="flex:1;">Cancel</button>
             <button class="timer-confirm-ok btn btn--primary" style="flex:1; background:#DB645A; border-color:#DB645A;">Close</button>
