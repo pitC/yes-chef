@@ -76,12 +76,11 @@
 
 .recipe-card__inner {
   display: flex;
-  overflow: hidden;
+  flex: 1;
 }
 
 .recipe-card__banner {
   width: 56px;
-  height: 112px;
   display: flex;
   align-items: center;
   justify-content: center;
