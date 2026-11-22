@@ -74,14 +74,20 @@
   transform: translateY(-2px);
 }
 
+.recipe-card__inner {
+  display: flex;
+  overflow: hidden;
+}
+
 .recipe-card__banner {
-  width: 100%;
+  width: 56px;
   height: 112px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  font-size: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
 
 .recipe-card__banner-icon {
@@ -94,6 +100,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  height: 100%;
 }
 
 .recipe-card__title {

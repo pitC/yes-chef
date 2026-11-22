@@ -94,16 +94,18 @@ export function renderRecipeCard(recipe, container) {
   const sortedTags = sortTagsWithPrimaryFirst(recipe.tags);
 
   container.innerHTML = `
-    <div class="recipe-card__banner" style="background-color: ${bannerFill};">
-      <span class="recipe-card__banner-icon">${bannerIcon}</span>
-    </div>
-    <div class="recipe-card__content">
-      <h3 class="recipe-card__title">${escapeHtml(recipe.title)}</h3>
-      <div class="recipe-card__meta">
-        <span class="recipe-card__time"><span class="recipe-card__clock">🕒</span> ${escapeHtml(timeDisplay)}</span>
+    <div class="recipe-card__inner">
+      <div class="recipe-card__banner" style="background-color: ${bannerFill};">
+        <span class="recipe-card__banner-icon">${bannerIcon}</span>
       </div>
-      <div class="recipe-card__tags">
-        ${sortedTags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`).join('')}
+      <div class="recipe-card__content">
+        <h3 class="recipe-card__title">${escapeHtml(recipe.title)}</h3>
+        <div class="recipe-card__meta">
+          <span class="recipe-card__time"><span class="recipe-card__clock">🕒</span> ${escapeHtml(timeDisplay)}</span>
+        </div>
+        <div class="recipe-card__tags">
+          ${sortedTags.map((tag) => `<span class="tag ${getTagClass(tag)}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`).join('')}
+        </div>
       </div>
     </div>
   `;
