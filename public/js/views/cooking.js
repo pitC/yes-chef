@@ -73,8 +73,29 @@ function savePrepDone() {
   }
 }
 
+function cookingLoadingSkeleton() {
+  return `
+    <div class="cooking-mode">
+      <header class="cooking-mode__header">
+        <button class="exit-cooking-btn btn btn--ghost" aria-label="Exit cooking mode" style="flex-shrink:0;">✕ Exit</button>
+        <h1 style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">Loading recipe</h1>
+      </header>
+      <div class="cooking-mode__steps cooking-steps" style="scroll-snap-type: y mandatory; padding:16px; display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; color:var(--color-text-secondary);">
+        <div style="height:140px; border-radius:var(--radius-lg); background:rgba(0,0,0,0.04); width:100%; max-width:420px;"></div>
+        <div style="height:260px; border-radius:var(--radius-lg); background:rgba(0,0,0,0.04); width:100%; max-width:420px;"></div>
+      </div>
+      <div class="timer-tray-container" style="position:relative; z-index:300;"></div>
+    </div>
+  `;
+}
+
 export async function renderCookingView(params, container) {
   if (!container) container = document.getElementById('app') || document.body;
+
+  // Paint a skeleton synchronously so the UI never goes blank while the
+  // recipe loads (viewManager destroys the old view before render() runs).
+  container.innerHTML = cookingLoadingSkeleton();
+
   let recipe;
   try {
     recipe = await getRecipe(params.id);

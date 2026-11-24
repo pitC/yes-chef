@@ -35,6 +35,21 @@ describe('browse view', () => {
     expect(cards.length).toBeGreaterThan(0);
   });
 
+  it('renders a loading skeleton immediately so the UI never goes blank', async () => {
+    const promise = renderBrowseView({}, container);
+
+    // Skeleton is painted synchronously before the recipes resolve
+    expect(container.textContent).toContain('Loading recipes');
+    expect(container.querySelector('.recipe-list')).toBeTruthy();
+
+    await promise;
+
+    // Real content replaces the skeleton once data is ready
+    const cards = container.querySelectorAll('.recipe-card');
+    expect(cards.length).toBeGreaterThan(0);
+    expect(container.textContent).not.toContain('Loading recipes');
+  });
+
   it('search input filters by keyword (debounced 150ms)', async () => {
     await renderBrowseView({}, container);
     

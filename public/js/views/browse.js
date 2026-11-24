@@ -7,7 +7,29 @@ import { renderRecipeCard } from '../components/recipe-card.js';
 import { attachCookbookSwitcher } from '../components/cookbook-switcher.js';
 import { renderEmptyCookbook } from '../components/empty-cookbook.js';
 
+function browseLoadingSkeleton() {
+  return `
+    <header class="app-header">
+      <img src="icons/icon-192.png" alt="Yes Chef logo" class="app-header__logo" />
+      <h1 class="app-header__title cookbook-switcher__trigger">Loading recipes</h1>
+    </header>
+    <main class="app-main">
+      <div class="recipe-list recipe-grid">
+        <div style="height:280px; border-radius:var(--radius-lg); background:rgba(0,0,0,0.04);"></div>
+        <div style="height:280px; border-radius:var(--radius-lg); background:rgba(0,0,0,0.04);"></div>
+        <div style="height:280px; border-radius:var(--radius-lg); background:rgba(0,0,0,0.04);"></div>
+      </div>
+    </main>
+  `;
+}
+
 export async function renderBrowseView(params, container) {
+  if (!container) container = document.getElementById('app') || document.body;
+
+  // Paint a skeleton synchronously so the UI never goes blank while the
+  // recipes load (viewManager destroys the old view before render() runs).
+  container.innerHTML = browseLoadingSkeleton();
+
   let recipes;
   try {
     recipes = await getRecipes();

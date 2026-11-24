@@ -87,4 +87,18 @@ describe('detail view', () => {
     
     expect(navigate).toHaveBeenCalledWith('/');
   });
+
+  it('renders a loading skeleton immediately so the UI never goes blank', async () => {
+    const promise = renderDetailView({ id: 'menemen' }, container);
+
+    // Skeleton is painted synchronously before the recipe data resolves
+    expect(container.textContent).toContain('Loading recipe');
+    expect(container.querySelector('.recipe-detail__title')).toBeTruthy();
+
+    await promise;
+
+    // Real content replaces the skeleton once data is ready
+    expect(container.textContent).toContain('Menemen');
+    expect(container.textContent).not.toContain('Loading recipe');
+  });
 });

@@ -66,6 +66,14 @@ export async function getRecipes() {
 }
 
 export async function getRecipe(id) {
+  // Serve from the already-loaded browse cache so grid → detail → cooking
+  // never re-fetches the same recipe from Firestore. Falls back to the
+  // network when the recipe isn't cached yet.
+  if (recipesCache) {
+    const cached = recipesCache.find((r) => r.id === id);
+    if (cached) return cached;
+  }
+
   if (!isTestEnv) {
     try {
       const remote = await fetchRecipe({ recipeId: id });

@@ -24,6 +24,12 @@ describe('recipes data service', () => {
     expect(recipe.tags.some((t) => t === 'veg' || t === 'vegetarian')).toBe(true);
   });
 
+  it('getRecipe serves from cache after getRecipes (same object, no refetch)', async () => {
+    const recipes = await getRecipes();
+    const cached = await getRecipe('menemen');
+    expect(cached).toBe(recipes.find((r) => r.id === 'menemen'));
+  });
+
   it('getRecipe returns null for missing ID', async () => {
     const recipe = await getRecipe('nonexistent');
     expect(recipe).toBeNull();

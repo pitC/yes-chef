@@ -151,4 +151,18 @@ describe('cooking step component', () => {
     timerBtn.click();
     expect(onStartTimer).toHaveBeenCalledWith('step_1', 300, 'Test timer');
   });
+
+  it('renders a loading skeleton immediately so the UI never goes blank', async () => {
+    const promise = renderCookingView({ id: 'menemen' }, container);
+
+    // Skeleton is painted synchronously before the recipe data resolves
+    expect(container.textContent).toContain('Loading recipe');
+    expect(container.querySelector('.cooking-mode')).toBeTruthy();
+
+    await promise;
+
+    // Real content replaces the skeleton once data is ready
+    expect(container.textContent).toContain('Menemen');
+    expect(container.querySelectorAll('.cooking-step').length).toBeGreaterThan(0);
+  });
 });
